@@ -78,4 +78,47 @@ public class UsuarioDao {
         }
         return null;
     }
+
+
+
+    public boolean atualizarDados(Usuario usuario) {
+
+        String sql =
+                "UPDATE usuarios SET nome = ?, login = ? WHERE id = ?";
+
+        try (Connection conexao = Conexao.conectar();
+             PreparedStatement stmt = conexao.prepareStatement(sql)) {
+
+            stmt.setString(1, usuario.getNome());
+            stmt.setString(2, usuario.getLogin());
+            stmt.setInt(3, usuario.getId());
+
+            stmt.executeUpdate();
+
+            return true;
+
+        } catch (SQLException e) {
+
+            System.out.println(
+                    "Erro ao atualizar usuário: " + e.getMessage()
+            );
+
+            if (e.getErrorCode() == 1062) {
+                JOptionPane.showMessageDialog(
+                        null,
+                        "Esse login já está sendo utilizado!"
+                );
+            } else {
+                JOptionPane.showMessageDialog(
+                        null,
+                        "Não foi possível atualizar os dados do usuário."
+                );
+            }
+
+            return false;
+        }
+    }
+
+
+
 }

@@ -2,6 +2,7 @@ package Escola;
 
 
 import java.sql.Date;
+import java.time.LocalDate;
 
 public class Frequencia {
 
@@ -9,6 +10,10 @@ public class Frequencia {
     private int alunoId;
     private Date data;
     private Boolean presente;
+
+    public Frequencia() {
+
+    }
 
     public int getId() {
         return id;

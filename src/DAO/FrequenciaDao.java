@@ -12,27 +12,30 @@ import java.util.List;
 
 public class FrequenciaDao {
 
-    public void salvar(Frequencia frequencia) {
+    public boolean salvar(Frequencia frequencia) {
 
-        try {
+        String sql = """
+        INSERT INTO frequencia (aluno_id, data, presente)
+        VALUES (?, ?, ?)
+        """;
 
-
-            String sql = "INSERT INTO frequencia (aluno_id, data, presente) VALUES (?,?,?)";
-
-            Connection conn = Conexao.conectar();
-
-            PreparedStatement stmt = conn.prepareStatement(sql);
+        try (Connection conn = Conexao.conectar();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, frequencia.getAlunoId());
             stmt.setDate(2, frequencia.getData());
-            stmt.setBoolean( 3,frequencia.isPresente());
+            stmt.setBoolean(3, frequencia.isPresente());
 
             stmt.executeUpdate();
 
-            System.out.println("Frequencia salva com sucesso!");
+            System.out.println("Frequência salva com sucesso!");
+            return true;
+
         } catch (SQLException e) {
-            System.out.println("Erro ao salvar frequencia" +
-                    e.getMessage());
+            System.out.println(
+                    "Erro ao salvar frequência: " + e.getMessage()
+            );
+            return false;
         }
     }
 
