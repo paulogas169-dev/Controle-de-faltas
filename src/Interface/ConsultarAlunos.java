@@ -20,11 +20,11 @@ public class ConsultarAlunos extends JFrame {
 
     private final Color AZUL = new Color(37, 99, 235);
     private final Color AZUL_ESCURO = new Color(20, 43, 74);
-    private final Color FUNDO = new Color(248, 250, 253);
-    private final Color TEXTO = new Color(23, 43, 77);
-    private final Color CINZA = new Color(100, 116, 139);
-    private final Color BRANCO = Color.WHITE;
-    private final Color BORDA = new Color(226, 232, 240);
+    private final Color FUNDO = Configuracoes.getCorFundo();
+    private final Color TEXTO = Configuracoes.getCorTexto();
+    private final Color CINZA = Configuracoes.getCorSubtexto();
+    private final Color BRANCO = Configuracoes.getCorPainel();
+    private final Color BORDA = Configuracoes.getCorBorda();
 
     public ConsultarAlunos() {
 
@@ -136,9 +136,9 @@ public class ConsultarAlunos extends JFrame {
         etiqueta.setFont(
                 new Font("Segoe UI", Font.BOLD, 11)
         );
-        etiqueta.setForeground(AZUL);
+        etiqueta.setForeground(Configuracoes.getCorTextoDestaque());
         etiqueta.setOpaque(true);
-        etiqueta.setBackground(new Color(239, 246, 255));
+        etiqueta.setBackground(Configuracoes.getCorDestaque());
         etiqueta.setBorder(
                 BorderFactory.createEmptyBorder(9, 5, 9, 5)
         );
@@ -202,7 +202,7 @@ public class ConsultarAlunos extends JFrame {
         );
 
         JButton botaoAtualizar = criarBotao(
-                "Atualizar", new Color(239, 246, 255), AZUL
+                "Atualizar", Configuracoes.getCorDestaque(), Configuracoes.getCorTextoDestaque()
         );
 
         botaoBuscar.addActionListener(e -> buscarAlunos());
@@ -238,9 +238,9 @@ public class ConsultarAlunos extends JFrame {
         tabela.setRowHeight(39);
         tabela.setShowVerticalLines(false);
         tabela.setShowHorizontalLines(true);
-        tabela.setGridColor(new Color(241, 245, 249));
-        tabela.setSelectionBackground(new Color(219, 234, 254));
-        tabela.setSelectionForeground(TEXTO);
+        tabela.setGridColor(Configuracoes.isModoEscuro() ? new Color(45, 45, 52) : new Color(241, 245, 249));
+        tabela.setSelectionBackground(Configuracoes.isModoEscuro() ? new Color(30, 58, 138) : new Color(219, 234, 254));
+        tabela.setSelectionForeground(Configuracoes.isModoEscuro() ? Color.WHITE : TEXTO);
         tabela.setIntercellSpacing(new Dimension(0, 1));
         tabela.setFillsViewportHeight(true);
         tabela.setSelectionMode(
@@ -257,7 +257,7 @@ public class ConsultarAlunos extends JFrame {
                 new Font("Segoe UI", Font.BOLD, 13)
         );
         cabecalho.setForeground(TEXTO);
-        cabecalho.setBackground(new Color(241, 245, 249));
+        cabecalho.setBackground(Configuracoes.isModoEscuro() ? new Color(35, 35, 40) : new Color(241, 245, 249));
         cabecalho.setPreferredSize(new Dimension(0, 43));
         cabecalho.setReorderingAllowed(false);
 
@@ -278,13 +278,13 @@ public class ConsultarAlunos extends JFrame {
 
         JButton botaoEditar = criarBotao(
                 "Editar aluno",
-                new Color(239, 246, 255),
-                AZUL
+                Configuracoes.getCorDestaque(),
+                Configuracoes.getCorTextoDestaque()
         );
 
         JButton botaoExcluir = criarBotao(
                 "Excluir aluno",
-                new Color(254, 242, 242),
+                Configuracoes.isModoEscuro() ? new Color(69, 10, 10) : new Color(254, 242, 242),
                 new Color(220, 38, 38)
         );
 

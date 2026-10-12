@@ -13,9 +13,9 @@ public class Tela extends JFrame {
 
     private final Color AZUL_ESCURO = new Color(20, 43, 74);
     private final Color AZUL = new Color(37, 99, 235);
-    private final Color FUNDO = new Color(248, 250, 253);
-    private final Color TEXTO = new Color(23, 43, 77);
-    private final Color CINZA = new Color(100, 116, 139);
+    private final Color FUNDO = Configuracoes.isModoEscuro() ? Configuracoes.COR_PRETA : new Color(248, 250, 253);
+    private final Color TEXTO = Configuracoes.isModoEscuro() ? Color.WHITE : new Color(23, 43, 77);
+    private final Color CINZA = Configuracoes.isModoEscuro() ? new Color(160, 165, 175) : new Color(100, 116, 139);
 
     private JTextField campologin;
     private JPasswordField camposenha;

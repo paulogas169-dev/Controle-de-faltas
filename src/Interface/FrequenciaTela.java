@@ -29,11 +29,11 @@ public class FrequenciaTela extends JFrame {
     private JLabel labelData;
 
     private final Color AZUL = new Color(37, 99, 235);
-    private final Color TEXTO = new Color(23, 43, 77);
-    private final Color CINZA = new Color(100, 116, 139);
-    private final Color FUNDO = new Color(248, 250, 253);
-    private final Color BRANCO = Color.WHITE;
-    private final Color BORDA = new Color(226, 232, 240);
+    private final Color TEXTO = Configuracoes.getCorTexto();
+    private final Color CINZA = Configuracoes.getCorSubtexto();
+    private final Color FUNDO = Configuracoes.getCorFundo();
+    private final Color BRANCO = Configuracoes.getCorPainel();
+    private final Color BORDA = Configuracoes.getCorBorda();
 
     public FrequenciaTela() {
 
@@ -144,9 +144,9 @@ public class FrequenciaTela extends JFrame {
         etiqueta.setFont(
                 new Font("Segoe UI", Font.BOLD, 11)
         );
-        etiqueta.setForeground(AZUL);
+        etiqueta.setForeground(Configuracoes.getCorTextoDestaque());
         etiqueta.setOpaque(true);
-        etiqueta.setBackground(new Color(239, 246, 255));
+        etiqueta.setBackground(Configuracoes.getCorDestaque());
         etiqueta.setBorder(
                 BorderFactory.createEmptyBorder(9, 5, 9, 5)
         );
@@ -291,9 +291,9 @@ public class FrequenciaTela extends JFrame {
         tabela.setRowHeight(42);
         tabela.setShowVerticalLines(false);
         tabela.setShowHorizontalLines(true);
-        tabela.setGridColor(new Color(241, 245, 249));
-        tabela.setSelectionBackground(new Color(219, 234, 254));
-        tabela.setSelectionForeground(TEXTO);
+        tabela.setGridColor(Configuracoes.isModoEscuro() ? new Color(45, 45, 52) : new Color(241, 245, 249));
+        tabela.setSelectionBackground(Configuracoes.isModoEscuro() ? new Color(30, 58, 138) : new Color(219, 234, 254));
+        tabela.setSelectionForeground(Configuracoes.isModoEscuro() ? Color.WHITE : TEXTO);
         tabela.setFillsViewportHeight(true);
         tabela.setSelectionMode(
                 ListSelectionModel.SINGLE_SELECTION
@@ -304,7 +304,7 @@ public class FrequenciaTela extends JFrame {
                 new Font("Segoe UI", Font.BOLD, 13)
         );
         cabecalho.setForeground(TEXTO);
-        cabecalho.setBackground(new Color(241, 245, 249));
+        cabecalho.setBackground(Configuracoes.isModoEscuro() ? new Color(35, 35, 40) : new Color(241, 245, 249));
         cabecalho.setPreferredSize(new Dimension(0, 43));
         cabecalho.setReorderingAllowed(false);
 

@@ -2,17 +2,17 @@ package Interface;
 
 import javax.swing.*;
 import java.awt.*;
-
-import Escola.Usuario;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
+import Escola.Usuario;
 import com.formdev.flatlaf.FlatClientProperties;
 
 public class Alunos extends JFrame {
 
     private final Color AZUL_ESCURO = new Color(20, 43, 74);
     private final Color AZUL = new Color(37, 99, 235);
-    private final Color FUNDO = Configuracoes.carregarCorFundo();
     private final Color TEXTO = new Color(23, 43, 77);
     private final Color CINZA = new Color(100, 116, 139);
     private final Color BRANCO = Color.WHITE;
@@ -22,12 +22,23 @@ public class Alunos extends JFrame {
     private JPanel areaPrincipal;
     private JPanel conteudoPrincipal;
 
-
+    private JPanel painelCabecalho;
+    private JLabel labelTituloCabecalho;
+    private JLabel labelDescricaoCabecalho;
+    private JButton botaoConfiguracoes;
     private JLabel labelUsuario;
+
+    private JLabel labelTituloSecao;
+    private JLabel labelDescricaoSecao;
+
+    private final List<JPanel> listaCartoes = new ArrayList<>();
+    private final List<JLabel> listaBadges = new ArrayList<>();
+    private final List<JLabel> listaTitulosCartao = new ArrayList<>();
+    private final List<JLabel> listaDescricoesCartao = new ArrayList<>();
+    private final List<JButton> listaBotoesCartao = new ArrayList<>();
 
     public Alunos(Usuario usuario) {
         this.usuario = Objects.requireNonNull(usuario);
-
 
         setTitle("Controle de Faltas | Painel Principal");
         setSize(1050, 700);
@@ -36,23 +47,23 @@ public class Alunos extends JFrame {
         setLocationRelativeTo(null);
 
         painelPrincipal = new JPanel(new BorderLayout());
-        painelPrincipal.setBackground(FUNDO);
 
         JPanel menuLateral = criarMenuLateral();
 
         areaPrincipal = new JPanel(new BorderLayout());
-        areaPrincipal.setBackground(FUNDO);
 
-        JPanel cabecalho = criarCabecalho();
+        painelCabecalho = criarCabecalho();
         conteudoPrincipal = criarConteudo();
 
-        areaPrincipal.add(cabecalho, BorderLayout.NORTH);
+        areaPrincipal.add(painelCabecalho, BorderLayout.NORTH);
         areaPrincipal.add(conteudoPrincipal, BorderLayout.CENTER);
 
         painelPrincipal.add(menuLateral, BorderLayout.WEST);
         painelPrincipal.add(areaPrincipal, BorderLayout.CENTER);
 
         setContentPane(painelPrincipal);
+
+        aplicarTema(Configuracoes.isModoEscuro());
 
         setVisible(true);
     }
@@ -141,9 +152,7 @@ public class Alunos extends JFrame {
 
         // AÇÕES DO MENU
         botaoAlunos.addActionListener(e -> abrirConsulta());
-
         botaoFrequencia.addActionListener(e -> abrirFrequencia());
-
         botaoOrganizacao.addActionListener(e -> abrirOrganizacao());
 
         return menu;
@@ -177,10 +186,8 @@ public class Alunos extends JFrame {
         return botao;
     }
 
-
     private JPanel criarCabecalho() {
         JPanel cabecalho = new JPanel(new BorderLayout());
-        cabecalho.setBackground(BRANCO);
         cabecalho.setBorder(
                 BorderFactory.createCompoundBorder(
                         BorderFactory.createMatteBorder(
@@ -195,30 +202,23 @@ public class Alunos extends JFrame {
         textos.setLayout(new BoxLayout(textos, BoxLayout.Y_AXIS));
         textos.setOpaque(false);
 
-        JLabel titulo = new JLabel("Painel de gerenciamento");
-        titulo.setFont(new Font("Segoe UI", Font.BOLD, 23));
-        titulo.setForeground(TEXTO);
+        labelTituloCabecalho = new JLabel("Painel de gerenciamento");
+        labelTituloCabecalho.setFont(new Font("Segoe UI", Font.BOLD, 23));
 
-        JLabel descricao = new JLabel(
+        labelDescricaoCabecalho = new JLabel(
                 "Gerencie alunos e acompanhe a frequência escolar."
         );
-        descricao.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        descricao.setForeground(CINZA);
+        labelDescricaoCabecalho.setFont(new Font("Segoe UI", Font.PLAIN, 13));
 
-        textos.add(titulo);
+        textos.add(labelTituloCabecalho);
         textos.add(Box.createVerticalStrut(6));
-        textos.add(descricao);
+        textos.add(labelDescricaoCabecalho);
 
-        // Nome do usuário conectado
         labelUsuario = new JLabel("Olá, " + usuario.getNome());
         labelUsuario.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        labelUsuario.setForeground(TEXTO);
 
-        // Botão de configurações
-        JButton botaoConfiguracoes = new JButton("⚙ Configurações");
+        botaoConfiguracoes = new JButton("⚙ Configurações");
         botaoConfiguracoes.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        botaoConfiguracoes.setForeground(AZUL);
-        botaoConfiguracoes.setBackground(new Color(239, 246, 255));
         botaoConfiguracoes.setFocusPainted(false);
         botaoConfiguracoes.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
@@ -227,7 +227,6 @@ public class Alunos extends JFrame {
                 "arc:10;focusWidth:0;borderWidth:0"
         );
 
-        // Evento: abre a janela de configurações
         botaoConfiguracoes.addActionListener(
                 e -> abrirConfiguracoes()
         );
@@ -248,33 +247,30 @@ public class Alunos extends JFrame {
     private JPanel criarConteudo() {
 
         JPanel conteudo = new JPanel(new BorderLayout(0, 22));
-        conteudo.setBackground(FUNDO);
         conteudo.setBorder(
                 BorderFactory.createEmptyBorder(30, 30, 30, 30)
         );
 
-        JLabel tituloSecao = new JLabel("Acesso rápido");
-        tituloSecao.setFont(
+        labelTituloSecao = new JLabel("Acesso rápido");
+        labelTituloSecao.setFont(
                 new Font("Segoe UI", Font.BOLD, 19)
         );
-        tituloSecao.setForeground(TEXTO);
 
-        JLabel descricaoSecao = new JLabel(
+        labelDescricaoSecao = new JLabel(
                 "Selecione uma opção para continuar."
         );
-        descricaoSecao.setFont(
+        labelDescricaoSecao.setFont(
                 new Font("Segoe UI", Font.PLAIN, 13)
         );
-        descricaoSecao.setForeground(CINZA);
 
         JPanel textos = new JPanel();
         textos.setLayout(
                 new BoxLayout(textos, BoxLayout.Y_AXIS)
         );
         textos.setOpaque(false);
-        textos.add(tituloSecao);
+        textos.add(labelTituloSecao);
         textos.add(Box.createVerticalStrut(6));
-        textos.add(descricaoSecao);
+        textos.add(labelDescricaoSecao);
 
         // CARTÕES DAS FUNCIONALIDADES
         JPanel cartoes = new JPanel(new GridLayout(2, 2, 18, 18));
@@ -327,25 +323,12 @@ public class Alunos extends JFrame {
     ) {
 
         JPanel cartao = new JPanel(new BorderLayout(0, 12));
-        cartao.setBackground(BRANCO);
-        cartao.setBorder(
-                BorderFactory.createCompoundBorder(
-                        BorderFactory.createLineBorder(
-                                new Color(226, 232, 240)
-                        ),
-                        BorderFactory.createEmptyBorder(
-                                22, 20, 20, 20
-                        )
-                )
-        );
 
         JLabel identificador = new JLabel(numero);
         identificador.setFont(
                 new Font("Segoe UI", Font.BOLD, 13)
         );
-        identificador.setForeground(AZUL);
         identificador.setOpaque(true);
-        identificador.setBackground(new Color(239, 246, 255));
         identificador.setBorder(
                 BorderFactory.createEmptyBorder(7, 10, 7, 10)
         );
@@ -357,7 +340,6 @@ public class Alunos extends JFrame {
         tituloCartao.setFont(
                 new Font("Segoe UI", Font.BOLD, 17)
         );
-        tituloCartao.setForeground(TEXTO);
 
         JLabel descricaoCartao = new JLabel(
                 "<html><div style='width:210px'>"
@@ -367,7 +349,6 @@ public class Alunos extends JFrame {
         descricaoCartao.setFont(
                 new Font("Segoe UI", Font.PLAIN, 12)
         );
-        descricaoCartao.setForeground(CINZA);
 
         JPanel parteSuperior = new JPanel(
                 new FlowLayout(FlowLayout.LEFT, 0, 0)
@@ -388,8 +369,6 @@ public class Alunos extends JFrame {
         botao.setFont(
                 new Font("Segoe UI", Font.BOLD, 12)
         );
-        botao.setForeground(AZUL);
-        botao.setBackground(new Color(239, 246, 255));
         botao.setFocusPainted(false);
         botao.setCursor(new Cursor(Cursor.HAND_CURSOR));
         botao.putClientProperty(
@@ -408,7 +387,85 @@ public class Alunos extends JFrame {
         cartao.add(informacoes, BorderLayout.CENTER);
         cartao.add(rodape, BorderLayout.SOUTH);
 
+        listaCartoes.add(cartao);
+        listaBadges.add(identificador);
+        listaTitulosCartao.add(tituloCartao);
+        listaDescricoesCartao.add(descricaoCartao);
+        listaBotoesCartao.add(botao);
+
         return cartao;
+    }
+
+    public void aplicarTema(boolean modoEscuro) {
+        Color corFundo = modoEscuro ? Configuracoes.COR_PRETA : Configuracoes.COR_BRANCA;
+        Color corPainel = modoEscuro ? Configuracoes.COR_PRETA_PAINEL : BRANCO;
+        Color corTexto = modoEscuro ? Color.WHITE : TEXTO;
+        Color corCinza = modoEscuro ? new Color(160, 165, 175) : CINZA;
+        Color corBorda = modoEscuro ? new Color(45, 45, 52) : new Color(226, 232, 240);
+        Color corDestaque = modoEscuro ? new Color(30, 41, 59) : new Color(239, 246, 255);
+        Color corTextoDestaque = modoEscuro ? new Color(96, 165, 250) : AZUL;
+
+        painelPrincipal.setBackground(corFundo);
+        areaPrincipal.setBackground(corFundo);
+        conteudoPrincipal.setBackground(corFundo);
+
+        if (painelCabecalho != null) {
+            painelCabecalho.setBackground(corPainel);
+            painelCabecalho.setBorder(
+                    BorderFactory.createCompoundBorder(
+                            BorderFactory.createMatteBorder(0, 0, 1, 0, corBorda),
+                            BorderFactory.createEmptyBorder(22, 30, 22, 30)
+                    )
+            );
+        }
+
+        if (labelTituloCabecalho != null) labelTituloCabecalho.setForeground(corTexto);
+        if (labelDescricaoCabecalho != null) labelDescricaoCabecalho.setForeground(corCinza);
+        if (labelUsuario != null) labelUsuario.setForeground(corTexto);
+
+        if (botaoConfiguracoes != null) {
+            botaoConfiguracoes.setBackground(corDestaque);
+            botaoConfiguracoes.setForeground(corTextoDestaque);
+        }
+
+        if (labelTituloSecao != null) labelTituloSecao.setForeground(corTexto);
+        if (labelDescricaoSecao != null) labelDescricaoSecao.setForeground(corCinza);
+
+        for (JPanel cartao : listaCartoes) {
+            cartao.setBackground(corPainel);
+            cartao.setBorder(
+                    BorderFactory.createCompoundBorder(
+                            BorderFactory.createLineBorder(corBorda),
+                            BorderFactory.createEmptyBorder(22, 20, 20, 20)
+                    )
+            );
+        }
+
+        for (JLabel badge : listaBadges) {
+            badge.setBackground(corDestaque);
+            badge.setForeground(corTextoDestaque);
+        }
+
+        for (JLabel t : listaTitulosCartao) {
+            t.setForeground(corTexto);
+        }
+
+        for (JLabel d : listaDescricoesCartao) {
+            d.setForeground(corCinza);
+        }
+
+        for (JButton b : listaBotoesCartao) {
+            b.setBackground(corDestaque);
+            b.setForeground(corTextoDestaque);
+        }
+
+        painelPrincipal.revalidate();
+        painelPrincipal.repaint();
+    }
+
+    private void aplicarCorFundo(Color cor) {
+        boolean modoEscuro = Configuracoes.isModoEscuro() || Configuracoes.COR_PRETA.equals(cor);
+        aplicarTema(modoEscuro);
     }
 
     // MÉTODOS PARA ABRIR AS TELAS EXISTENTES
@@ -439,8 +496,6 @@ public class Alunos extends JFrame {
                 usuario,
                 this::aplicarCorFundo,
                 this::atualizarNomeUsuario
-
-
         );
 
         configuracoes.setVisible(true);
@@ -449,15 +504,4 @@ public class Alunos extends JFrame {
     private void atualizarNomeUsuario() {
         labelUsuario.setText("Olá, " + usuario.getNome());
     }
-
-    private void aplicarCorFundo(Color cor) {
-        painelPrincipal.setBackground(cor);
-        areaPrincipal.setBackground(cor);
-        conteudoPrincipal.setBackground(cor);
-
-        painelPrincipal.revalidate();
-        painelPrincipal.repaint();
-    }
-
 }
-

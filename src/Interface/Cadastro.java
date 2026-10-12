@@ -22,17 +22,10 @@ public class Cadastro extends JFrame {
 
     private final Random random = new Random();
 
-    private static final Color FUNDO =
-            new Color(248, 250, 253);
-
-    private static final Color TEXTO =
-            new Color(23, 43, 77);
-
-    private static final Color AZUL =
-            new Color(37, 99, 235);
-
-    private static final Color CINZA =
-            new Color(100, 116, 139);
+    private final Color FUNDO = Configuracoes.getCorFundo();
+    private final Color TEXTO = Configuracoes.getCorTexto();
+    private final Color AZUL = new Color(37, 99, 235);
+    private final Color CINZA = Configuracoes.getCorSubtexto();
 
     public Cadastro() {
 

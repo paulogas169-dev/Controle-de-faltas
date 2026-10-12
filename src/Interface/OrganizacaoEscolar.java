@@ -25,15 +25,15 @@ public class OrganizacaoEscolar extends JFrame {
 
     private final Color AZUL = new Color(37, 99, 235);
     private final Color AZUL_ESCURO = new Color(20, 43, 74);
-    private final Color TEXTO = new Color(23, 43, 77);
-    private final Color CINZA = new Color(100, 116, 139);
-    private final Color FUNDO = new Color(248, 250, 253);
-    private final Color BRANCO = Color.WHITE;
-    private final Color BORDA = new Color(226, 232, 240);
+    private final Color TEXTO = Configuracoes.getCorTexto();
+    private final Color CINZA = Configuracoes.getCorSubtexto();
+    private final Color FUNDO = Configuracoes.getCorFundo();
+    private final Color BRANCO = Configuracoes.getCorPainel();
+    private final Color BORDA = Configuracoes.getCorBorda();
     private final Color VERDE = new Color(22, 163, 74);
-    private final Color VERDE_FUNDO = new Color(220, 252, 231);
+    private final Color VERDE_FUNDO = Configuracoes.isModoEscuro() ? new Color(20, 83, 45) : new Color(220, 252, 231);
     private final Color VERMELHO = new Color(220, 38, 38);
-    private final Color VERMELHO_FUNDO = new Color(254, 226, 226);
+    private final Color VERMELHO_FUNDO = Configuracoes.isModoEscuro() ? new Color(127, 29, 29) : new Color(254, 226, 226);
 
     private final DateTimeFormatter FORMATO_BR = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
@@ -61,7 +61,7 @@ public class OrganizacaoEscolar extends JFrame {
 
     public OrganizacaoEscolar() {
         setTitle("Controle de Faltas | Organização Escolar - Consulta de Frequência");
-        setSize(1100, 750);
+        setSize(1300, 750);
         setMinimumSize(new Dimension(950, 640));
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
@@ -146,9 +146,9 @@ public class OrganizacaoEscolar extends JFrame {
 
         JLabel etiqueta = new JLabel("  CONSULTA DE FREQUÊNCIA  ");
         etiqueta.setFont(new Font("Segoe UI", Font.BOLD, 11));
-        etiqueta.setForeground(AZUL);
+        etiqueta.setForeground(Configuracoes.getCorTextoDestaque());
         etiqueta.setOpaque(true);
-        etiqueta.setBackground(new Color(239, 246, 255));
+        etiqueta.setBackground(Configuracoes.getCorDestaque());
         etiqueta.setBorder(BorderFactory.createEmptyBorder(8, 12, 8, 12));
         etiqueta.putClientProperty(FlatClientProperties.STYLE, "arc:8");
 
@@ -168,10 +168,10 @@ public class OrganizacaoEscolar extends JFrame {
         labelTotalFaltas = new JLabel("0");
         labelTaxaPresenca = new JLabel("0%");
 
-        painel.add(criarCardMetrica("Total de registros", labelTotalRegistros, AZUL, new Color(239, 246, 255)));
+        painel.add(criarCardMetrica("Total de registros", labelTotalRegistros, AZUL, Configuracoes.getCorDestaque()));
         painel.add(criarCardMetrica("Presenças", labelTotalPresentes, VERDE, VERDE_FUNDO));
         painel.add(criarCardMetrica("Faltas", labelTotalFaltas, VERMELHO, VERMELHO_FUNDO));
-        painel.add(criarCardMetrica("Índice de presença", labelTaxaPresenca, new Color(99, 102, 241), new Color(238, 242, 255)));
+        painel.add(criarCardMetrica("Índice de presença", labelTaxaPresenca, new Color(99, 102, 241), Configuracoes.isModoEscuro() ? new Color(30, 41, 59) : new Color(238, 242, 255)));
 
         return painel;
     }
@@ -236,8 +236,8 @@ public class OrganizacaoEscolar extends JFrame {
 
         JButton btnHoje = new JButton("Hoje");
         btnHoje.setFont(new Font("Segoe UI", Font.BOLD, 11));
-        btnHoje.setForeground(AZUL);
-        btnHoje.setBackground(new Color(239, 246, 255));
+        btnHoje.setForeground(Configuracoes.getCorTextoDestaque());
+        btnHoje.setBackground(Configuracoes.getCorDestaque());
         btnHoje.setFocusPainted(false);
         btnHoje.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnHoje.setPreferredSize(new Dimension(60, 38));
@@ -358,8 +358,8 @@ public class OrganizacaoEscolar extends JFrame {
 
         JButton btnLimpar = new JButton("Limpar");
         btnLimpar.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        btnLimpar.setForeground(AZUL);
-        btnLimpar.setBackground(new Color(239, 246, 255));
+        btnLimpar.setForeground(Configuracoes.getCorTextoDestaque());
+        btnLimpar.setBackground(Configuracoes.getCorDestaque());
         btnLimpar.setFocusPainted(false);
         btnLimpar.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnLimpar.setPreferredSize(new Dimension(75, 38));

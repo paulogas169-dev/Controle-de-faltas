@@ -17,10 +17,11 @@ public class CadastroAluno extends JFrame {
     private JButton botaoCadastrar;
 
     private final Color AZUL = new Color(37, 99, 235);
-    private final Color TEXTO = new Color(23, 43, 77);
-    private final Color CINZA = new Color(100, 116, 139);
-    private final Color FUNDO = new Color(248, 250, 253);
-    private final Color BRANCO = Color.WHITE;
+    private final Color TEXTO = Configuracoes.getCorTexto();
+    private final Color CINZA = Configuracoes.getCorSubtexto();
+    private final Color FUNDO = Configuracoes.getCorFundo();
+    private final Color BRANCO = Configuracoes.getCorPainel();
+    private final Color BORDA = Configuracoes.getCorBorda();
 
     public CadastroAluno() {
 
@@ -44,7 +45,7 @@ public class CadastroAluno extends JFrame {
                 BorderFactory.createCompoundBorder(
                         BorderFactory.createMatteBorder(
                                 0, 0, 1, 0,
-                                new Color(226, 232, 240)
+                                BORDA
                         ),
                         BorderFactory.createEmptyBorder(
                                 25, 35, 25, 35
@@ -85,7 +86,7 @@ public class CadastroAluno extends JFrame {
         formulario.setBorder(
                 BorderFactory.createCompoundBorder(
                         BorderFactory.createLineBorder(
-                                new Color(226, 232, 240)
+                                BORDA
                         ),
                         BorderFactory.createEmptyBorder(
                                 28, 30, 28, 30
