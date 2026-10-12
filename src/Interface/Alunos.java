@@ -116,12 +116,15 @@ public class Alunos extends JFrame {
         JButton botaoInicio = criarBotaoMenu("⌂   Início", true);
         JButton botaoAlunos = criarBotaoMenu("♙   Alunos", false);
         JButton botaoFrequencia = criarBotaoMenu("✓   Frequência", false);
+        JButton botaoOrganizacao = criarBotaoMenu("📋   Organização", false);
 
         menu.add(botaoInicio);
         menu.add(Box.createVerticalStrut(10));
         menu.add(botaoAlunos);
         menu.add(Box.createVerticalStrut(10));
         menu.add(botaoFrequencia);
+        menu.add(Box.createVerticalStrut(10));
+        menu.add(botaoOrganizacao);
 
         menu.add(Box.createVerticalGlue());
 
@@ -140,6 +143,8 @@ public class Alunos extends JFrame {
         botaoAlunos.addActionListener(e -> abrirConsulta());
 
         botaoFrequencia.addActionListener(e -> abrirFrequencia());
+
+        botaoOrganizacao.addActionListener(e -> abrirOrganizacao());
 
         return menu;
     }
@@ -302,14 +307,9 @@ public class Alunos extends JFrame {
         cartoes.add(criarCartao(
                 "04",
                 "Organização escolar",
-                "Área preparada para futuras funcionalidades.",
-                "Em desenvolvimento",
-                () -> JOptionPane.showMessageDialog(
-                        this,
-                        "Esta funcionalidade será implementada futuramente.",
-                        "Em desenvolvimento",
-                        JOptionPane.INFORMATION_MESSAGE
-                )
+                "Consulte o histórico de frequência e datas diárias.",
+                "Consultar frequência",
+                () -> abrirOrganizacao()
         ));
 
         conteudo.add(textos, BorderLayout.NORTH);
@@ -426,6 +426,11 @@ public class Alunos extends JFrame {
     private void abrirFrequencia() {
         FrequenciaTela frequencia = new FrequenciaTela();
         frequencia.setVisible(true);
+    }
+
+    private void abrirOrganizacao() {
+        OrganizacaoEscolar organizacao = new OrganizacaoEscolar();
+        organizacao.setVisible(true);
     }
 
     private void abrirConfiguracoes() {

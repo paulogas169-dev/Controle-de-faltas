@@ -1,8 +1,6 @@
 package Escola;
 
-
 import java.sql.Date;
-import java.time.LocalDate;
 
 public class Frequencia {
 
@@ -10,9 +8,26 @@ public class Frequencia {
     private int alunoId;
     private Date data;
     private Boolean presente;
+    private String alunoNome;
+    private String salaNome;
 
     public Frequencia() {
+    }
 
+    public Frequencia(int id, int alunoId, Date data, Boolean presente) {
+        this.id = id;
+        this.alunoId = alunoId;
+        this.data = data;
+        this.presente = presente;
+    }
+
+    public Frequencia(int id, int alunoId, Date data, Boolean presente, String alunoNome, String salaNome) {
+        this.id = id;
+        this.alunoId = alunoId;
+        this.data = data;
+        this.presente = presente;
+        this.alunoNome = alunoNome;
+        this.salaNome = salaNome;
     }
 
     public int getId() {
@@ -45,5 +60,21 @@ public class Frequencia {
 
     public void setPresente(Boolean presente) {
         this.presente = presente;
+    }
+
+    public String getAlunoNome() {
+        return alunoNome;
+    }
+
+    public void setAlunoNome(String alunoNome) {
+        this.alunoNome = alunoNome;
+    }
+
+    public String getSalaNome() {
+        return salaNome;
+    }
+
+    public void setSalaNome(String salaNome) {
+        this.salaNome = salaNome;
     }
 }

@@ -22,7 +22,7 @@ public class Tela extends JFrame {
     private JButton botaoentrar;
 
     public Tela() {
-        setTitle("Controle de Faltas");
+        setTitle("LALACK 1.0");
         setSize(900, 600);
         setMinimumSize(new Dimension(760, 520));
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -53,7 +53,7 @@ public class Tela extends JFrame {
         simbolo.setFont(new Font("Segoe UI", Font.BOLD, 38));
         simbolo.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JLabel marca = new JLabel("Controle de Faltas");
+        JLabel marca = new JLabel("LALACK");
         marca.setFont(new Font("Segoe UI", Font.BOLD, 25));
         marca.setForeground(Color.WHITE);
         marca.setAlignmentX(Component.LEFT_ALIGNMENT);

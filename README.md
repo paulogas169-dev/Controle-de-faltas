@@ -54,13 +54,19 @@ O **Controle de Faltas** é um sistema completo desenvolvido em **Java** com int
 - **Edição em Grade**: Seletor inline em cada linha da tabela entre **"Presente"** e **"Falta"**.
 - **Gravação em Lote**: Processamento de chamada em lote com relatório visual final de registros salvos e eventuais falhas.
 
-### 🎨 4. Painel de Controle e Personalização
+### 📊 4. Organização Escolar & Consulta de Frequência
+- **Consulta por Datas do Dia**: Seleção rápida da data de hoje (`Hoje`), datas já registradas no banco ou consulta por data específica.
+- **Filtros Combinados**: Filtragem simultânea por data, turma/sala, busca por nome de aluno e situação (Presente / Falta).
+- **Cards de Métricas em Tempo Real**: Indicadores dinâmicos de Total de Registros, Presenças, Faltas e Taxa de Presença (%).
+- **Gestão de Registros**: Alternância de presença/falta em lote ou exclusão de registros incorretos diretamente pela grade.
+
+### 🎨 5. Painel de Controle e Personalização
 - **Dashboard com Acesso Rápido**: Menu lateral com navegação fluida e cartões de atalho.
 - **Personalização de Aparência**: Seletor de cores (`JColorChooser`) para definir a cor de fundo do painel.
 - **Persistência Local**: A preferência visual do usuário é armazenada no sistema através da API `java.util.prefs.Preferences`.
 - **Edição de Perfil**: Alteração do nome de exibição e nome de usuário diretamente na janela de configurações.
 
-### 💻 5. Modo Console (CLI)
+### 💻 6. Modo Console (CLI)
 - Menu interativo via terminal (`Conexao.Main`) com suporte a cadastro de alunos, consulta de salas, cadastro de usuários e realização de login via terminal.
 
 ---
@@ -108,6 +114,7 @@ src/
 │   ├── CadastroAluno.java    # Formulário para cadastrar novos alunos
 │   ├── ConsultarAlunos.java  # Tabela de consulta, filtro, edição e exclusão
 │   ├── FrequenciaTela.java   # Lançamento de frequência e controle de presença diária
+│   ├── OrganizacaoEscolar.java # Consulta detalhada de frequência por datas do dia e turma
 │   └── Configuracoes.java    # Janela modal para dados do perfil e personalização de cores
 │
 └── Imagens/                  # Ícones e recursos visuais da interface
