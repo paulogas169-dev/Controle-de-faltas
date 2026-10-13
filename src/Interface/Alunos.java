@@ -124,10 +124,10 @@ public class Alunos extends JFrame {
         menu.add(labelMenu);
         menu.add(Box.createVerticalStrut(15));
 
-        JButton botaoInicio = criarBotaoMenu("⌂   Início", true);
-        JButton botaoAlunos = criarBotaoMenu("♙   Alunos", false);
-        JButton botaoFrequencia = criarBotaoMenu("✓   Frequência", false);
-        JButton botaoOrganizacao = criarBotaoMenu("📋   Organização", false);
+        JButton botaoInicio = criarBotaoMenu(" Início", true);
+        JButton botaoAlunos = criarBotaoMenu(" Alunos", false);
+        JButton botaoFrequencia = criarBotaoMenu(" Frequência", false);
+        JButton botaoOrganizacao = criarBotaoMenu(" Organização", false);
 
         menu.add(botaoInicio);
         menu.add(Box.createVerticalStrut(10));
@@ -217,8 +217,27 @@ public class Alunos extends JFrame {
         labelUsuario = new JLabel("Olá, " + usuario.getNome());
         labelUsuario.setFont(new Font("Segoe UI", Font.BOLD, 12));
 
-        botaoConfiguracoes = new JButton("⚙ Configurações");
+
+        java.net.URL recursoEngrenagem =
+                getClass().getResource("/Imagens/engrenagem.png");
+
+        botaoConfiguracoes = new JButton("Configurações");
+
+        if (recursoEngrenagem != null) {
+            ImageIcon iconeOriginal = new ImageIcon(recursoEngrenagem);
+
+            Image imagem = iconeOriginal.getImage().getScaledInstance(
+                    18, 18, Image.SCALE_SMOOTH
+            );
+
+            botaoConfiguracoes.setIcon(new ImageIcon(imagem));
+        } else {
+            System.err.println("Ícone de engrenagem não encontrado!");
+        }
+
+        botaoConfiguracoes.setIconTextGap(8);
         botaoConfiguracoes.setFont(new Font("Segoe UI", Font.BOLD, 12));
+
         botaoConfiguracoes.setFocusPainted(false);
         botaoConfiguracoes.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
