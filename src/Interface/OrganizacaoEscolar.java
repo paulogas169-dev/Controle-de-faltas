@@ -619,7 +619,7 @@ public class OrganizacaoEscolar extends JFrame {
                 LocalDate localDate = LocalDate.parse(textoManual, FORMATO_BR);
                 return Date.valueOf(localDate);
             } catch (DateTimeParseException e) {
-                // Formato incorreto, ignora ou alerta
+
             }
         }
 
