@@ -186,7 +186,7 @@ public class FrequenciaTela extends JFrame {
         textosTopo.add(Box.createVerticalStrut(5));
         textosTopo.add(descricaoPagina);
 
-        btnManual = new JButton("☷  Frequência manual");
+        btnManual = new JButton("Registrar Frequência Manualmente?");
         btnManual.setFont(new Font("Segoe UI", Font.BOLD, 14));
         btnManual.setForeground(Color.WHITE);
         btnManual.setBackground(new Color(37, 99, 235));
