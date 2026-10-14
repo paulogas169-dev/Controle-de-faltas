@@ -212,4 +212,58 @@ public class FrequenciaDao {
             return false;
         }
     }
+
+
+    public boolean registrarPresencaRFID(int alunoId) {
+        Date hoje = Date.valueOf(java.time.LocalDate.now());
+
+        String consulta = """
+        SELECT id FROM frequencia
+        WHERE aluno_id = ? AND data = ?
+        """;
+
+        try (Connection conn = Conexao.conectar()) {
+
+            // Verifica se o aluno já tem registro hoje
+            try (PreparedStatement stmt = conn.prepareStatement(consulta)) {
+                stmt.setInt(1, alunoId);
+                stmt.setDate(2, hoje);
+
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        System.out.println("Presença já registrada hoje.");
+                        return false;
+                    }
+                }
+            }
+
+            // Registra a presença
+            String sql = """
+            INSERT INTO frequencia (aluno_id, data, presente)
+            VALUES (?, ?, ?)
+            """;
+
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setInt(1, alunoId);
+                stmt.setDate(2, hoje);
+                stmt.setBoolean(3, true);
+
+                stmt.executeUpdate();
+
+                System.out.println("Presença registrada com sucesso!");
+                return true;
+            }
+
+        } catch (SQLException e) {
+            // O índice UNIQUE também pode impedir duplicidade
+            if ("23000".equals(e.getSQLState())) {
+                System.out.println("Presença já registrada hoje.");
+            } else {
+                System.out.println("Erro ao registrar presença: " + e.getMessage());
+            }
+
+            return false;
+        }
+    }
+
 }

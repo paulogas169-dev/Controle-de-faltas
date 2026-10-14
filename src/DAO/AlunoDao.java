@@ -106,35 +106,43 @@ public class AlunoDao {
         }
     }
 
-    public List<Aluno> listarPorSala (int salaId) {
 
+    public List<Aluno> listarPorSala(int salaId) {
         List<Aluno> alunos = new ArrayList<>();
 
-        String sql = "SELECT * FROM alunos WHERE sala_id = ?";
+        String sql = """
+        SELECT a.id, a.nome, a.sala_id, s.nome AS sala
+        FROM alunos a
+        LEFT JOIN salas s ON a.sala_id = s.id
+        WHERE a.sala_id = ?
+        ORDER BY a.nome
+        """;
 
-        try {
-            Connection conn = Conexao.conectar();
-            PreparedStatement stmt = conn.prepareStatement(sql);
+        try (Connection conn = Conexao.conectar();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setInt(1,salaId);
+            stmt.setInt(1, salaId);
 
-            ResultSet rs = stmt.executeQuery();
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Aluno aluno = new Aluno();
 
-            while (rs.next()) {
+                    aluno.setId(rs.getInt("id"));
+                    aluno.setNome(rs.getString("nome"));
+                    aluno.setSala_id(rs.getInt("sala_id"));
+                    aluno.setSala(rs.getString("sala"));
 
-                Aluno aluno = new Aluno();
-
-                aluno.setId(rs.getInt("id"));
-                aluno.setNome(rs.getString("nome"));
-                aluno.setSala_id(rs.getInt("sala_id"));
-
-                alunos.add(aluno);
+                    alunos.add(aluno);
+                }
             }
+
         } catch (SQLException e) {
-            System.out.println("Erro ao buscar aluno: " + e.getMessage());
+            System.out.println("Erro ao buscar alunos: " + e.getMessage());
         }
+
         return alunos;
     }
+
 
     public List<Aluno> buscarPorNome(String nome) {
 
@@ -173,6 +181,43 @@ public class AlunoDao {
         }
         return alunos;
     }
+
+
+
+    public Aluno buscarPorUid(String uid) {
+        String sql = """
+        SELECT a.id, a.nome, a.sala_id, s.nome AS sala
+        FROM alunos a
+        LEFT JOIN salas s ON a.sala_id = s.id
+        WHERE a.uid_rfid = ?
+        """;
+
+        try (Connection conn = Conexao.conectar();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, uid.trim().toUpperCase());
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    Aluno aluno = new Aluno();
+
+                    aluno.setId(rs.getInt("id"));
+                    aluno.setNome(rs.getString("nome"));
+                    aluno.setSala_id(rs.getInt("sala_id"));
+                    aluno.setSala(rs.getString("sala"));
+
+                    return aluno;
+                }
+            }
+
+        } catch (SQLException e) {
+            System.out.println("Erro ao buscar UID: " + e.getMessage());
+        }
+
+        return null;
+    }
+
+
 
 }
 
