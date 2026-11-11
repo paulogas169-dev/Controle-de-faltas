@@ -10,6 +10,7 @@ public class Frequencia {
     private Boolean presente;
     private String alunoNome;
     private String salaNome;
+    private int totalFaltasAluno;
 
     public Frequencia() {
     }
@@ -76,5 +77,13 @@ public class Frequencia {
 
     public void setSalaNome(String salaNome) {
         this.salaNome = salaNome;
+    }
+
+    public int getTotalFaltasAluno() {
+        return totalFaltasAluno;
+    }
+
+    public void setTotalFaltasAluno(int totalFaltasAluno) {
+        this.totalFaltasAluno = totalFaltasAluno;
     }
 }

@@ -71,7 +71,8 @@ public class FrequenciaDao {
     public List<Frequencia> listarTodas() {
         List<Frequencia> lista = new ArrayList<>();
         String sql = """
-            SELECT f.id, f.aluno_id, f.data, f.presente, a.nome AS aluno_nome, s.nome AS sala_nome
+            SELECT f.id, f.aluno_id, f.data, f.presente, a.nome AS aluno_nome, s.nome AS sala_nome,
+                   (SELECT COUNT(*) FROM frequencia f2 WHERE f2.aluno_id = f.aluno_id AND f2.presente = 0) AS total_faltas
             FROM frequencia f
             JOIN alunos a ON f.aluno_id = a.id
             JOIN salas s ON a.sala_id = s.id
@@ -90,6 +91,7 @@ public class FrequenciaDao {
                 f.setPresente(rs.getBoolean("presente"));
                 f.setAlunoNome(rs.getString("aluno_nome"));
                 f.setSalaNome(rs.getString("sala_nome"));
+                f.setTotalFaltasAluno(rs.getInt("total_faltas"));
                 lista.add(f);
             }
         } catch (SQLException e) {
@@ -120,7 +122,8 @@ public class FrequenciaDao {
     public List<Frequencia> consultar(Date data, Integer salaId, String nomeAluno, Boolean presente) {
         List<Frequencia> lista = new ArrayList<>();
         StringBuilder sql = new StringBuilder("""
-            SELECT f.id, f.aluno_id, f.data, f.presente, a.nome AS aluno_nome, s.nome AS sala_nome
+            SELECT f.id, f.aluno_id, f.data, f.presente, a.nome AS aluno_nome, s.nome AS sala_nome,
+                   (SELECT COUNT(*) FROM frequencia f2 WHERE f2.aluno_id = f.aluno_id AND f2.presente = 0) AS total_faltas
             FROM frequencia f
             JOIN alunos a ON f.aluno_id = a.id
             JOIN salas s ON a.sala_id = s.id
@@ -173,6 +176,7 @@ public class FrequenciaDao {
                     f.setPresente(rs.getBoolean("presente"));
                     f.setAlunoNome(rs.getString("aluno_nome"));
                     f.setSalaNome(rs.getString("sala_nome"));
+                    f.setTotalFaltasAluno(rs.getInt("total_faltas"));
                     lista.add(f);
                 }
             }
@@ -181,6 +185,68 @@ public class FrequenciaDao {
         }
 
         return lista;
+    }
+
+    public int contarPresentesNaData(Date data) {
+        if (data == null) {
+            return 0;
+        }
+        String sql = "SELECT COUNT(*) FROM frequencia WHERE data = ? AND presente = 1";
+        try (Connection conn = Conexao.conectar();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setDate(1, data);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Erro ao contar presentes na data: " + e.getMessage());
+        }
+        return 0;
+    }
+
+    public int contarFaltasNaData(Date data) {
+        if (data == null) {
+            return 0;
+        }
+        String sql = "SELECT COUNT(*) FROM frequencia WHERE data = ? AND presente = 0";
+        try (Connection conn = Conexao.conectar();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setDate(1, data);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Erro ao contar faltas na data: " + e.getMessage());
+        }
+        return 0;
+    }
+
+    public int contarPresentesHoje() {
+        return contarPresentesNaData(Date.valueOf(java.time.LocalDate.now()));
+    }
+
+    public int contarFaltasHoje() {
+        return contarFaltasNaData(Date.valueOf(java.time.LocalDate.now()));
+    }
+
+    public int contarFaltasPorAluno(int alunoId) {
+        String sql = "SELECT COUNT(*) FROM frequencia WHERE aluno_id = ? AND presente = 0";
+        try (Connection conn = Conexao.conectar();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, alunoId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Erro ao contar faltas do aluno: " + e.getMessage());
+        }
+        return 0;
     }
 
     public boolean atualizarPresenca(int id, boolean presente) {

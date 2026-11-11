@@ -30,6 +30,7 @@ public class Configuracoes extends JDialog {
     private final Runnable aoAtualizarUsuario;
 
     private JTextField campoNome;
+    private JTextField campoEmail;
     private JTextField campoLogin;
     private JLabel amostraCor;
     private JButton btnModoClaro;
@@ -57,8 +58,8 @@ public class Configuracoes extends JDialog {
         this.modoEscuroSelecionado = isModoEscuro();
         this.corSelecionada = this.modoEscuroSelecionado ? COR_PRETA : COR_BRANCA;
 
-        setSize(600, 620);
-        setMinimumSize(new Dimension(520, 560));
+        setSize(600, 680);
+        setMinimumSize(new Dimension(520, 620));
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setLocationRelativeTo(pai);
 
@@ -117,9 +118,11 @@ public class Configuracoes extends JDialog {
         JLabel tituloConta = criarTituloSecao("Sua conta");
 
         campoNome = criarCampo(usuario.getNome());
+        campoEmail = criarCampo(usuario.getEmail() != null ? usuario.getEmail() : "");
         campoLogin = criarCampo(usuario.getLogin());
 
         JLabel labelNome = criarLabel("Nome de exibição");
+        JLabel labelEmail = criarLabel("E-mail");
         JLabel labelLogin = criarLabel("Nome de usuário (login)");
 
         formulario.add(tituloConta);
@@ -128,6 +131,11 @@ public class Configuracoes extends JDialog {
         formulario.add(labelNome);
         formulario.add(Box.createVerticalStrut(6));
         formulario.add(campoNome);
+        formulario.add(Box.createVerticalStrut(12));
+
+        formulario.add(labelEmail);
+        formulario.add(Box.createVerticalStrut(6));
+        formulario.add(campoEmail);
         formulario.add(Box.createVerticalStrut(12));
 
         formulario.add(labelLogin);
@@ -306,12 +314,13 @@ public class Configuracoes extends JDialog {
 
     private void salvarConfiguracoes() {
         String nome = campoNome.getText().trim();
+        String email = campoEmail.getText().trim();
         String login = campoLogin.getText().trim();
 
-        if (nome.isEmpty() || login.isEmpty()) {
+        if (nome.isEmpty() || login.isEmpty() || email.isEmpty()) {
             JOptionPane.showMessageDialog(
                     this,
-                    "Preencha o nome e o login.",
+                    "Preencha o nome, e-mail e login.",
                     "Campos obrigatórios",
                     JOptionPane.WARNING_MESSAGE
             );
@@ -319,6 +328,7 @@ public class Configuracoes extends JDialog {
         }
 
         usuario.setNome(nome);
+        usuario.setEmail(email);
         usuario.setLogin(login);
 
         UsuarioDao usuarioDao = new UsuarioDao();

@@ -10,68 +10,61 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class UsuarioDao {
+
     public boolean salvar(Usuario usuario) {
 
-        String sql = "INSERT INTO usuarios (nome, login, senha) VALUES ( ?, ?, ?)";
+        String sql = "INSERT INTO usuarios (nome, login, senha, email) VALUES (?, ?, ?, ?)";
 
-        try {
-            Connection conexao = Conexao.conectar();
-
-            PreparedStatement stmt = conexao.prepareStatement(sql);
+        try (Connection conexao = Conexao.conectar();
+             PreparedStatement stmt = conexao.prepareStatement(sql)) {
 
             stmt.setString(1, usuario.getNome());
             stmt.setString(2, usuario.getLogin());
             stmt.setString(3, usuario.getSenha());
+            stmt.setString(4, usuario.getEmail());
 
             stmt.executeUpdate();
-
-
-
-
-            stmt.close();
-            conexao.close();
-
             return true;
-        } catch (SQLException e){
+
+        } catch (SQLException e) {
 
             System.out.println("Erro ao cadastrar usuário: " + e.getMessage());
 
             if (e.getErrorCode() == 1062) {
-                JOptionPane.showMessageDialog(null, "Esse login já está cadastrado! ");
+                JOptionPane.showMessageDialog(null, "Esse login já está cadastrado!");
             } else {
-                JOptionPane.showMessageDialog(null, "Erro ao cadastrar usuário");
+                JOptionPane.showMessageDialog(null, "Erro ao cadastrar usuário: " + e.getMessage());
             }
             return false;
         }
     }
 
-    public Usuario login (String login, String senha) {
+    public Usuario login(String login, String senha) {
 
         String sql = "SELECT * FROM usuarios WHERE login = ? AND senha = ?";
 
-        try{
-            Connection conexao = Conexao.conectar();
-
-            PreparedStatement stmt = conexao.prepareStatement(sql);
+        try (Connection conexao = Conexao.conectar();
+             PreparedStatement stmt = conexao.prepareStatement(sql)) {
 
             stmt.setString(1, login);
             stmt.setString(2, senha);
 
-            ResultSet resultado = stmt.executeQuery();
+            try (ResultSet resultado = stmt.executeQuery()) {
+                if (resultado.next()) {
+                    Usuario usuario = new Usuario();
 
-            if (resultado.next()) {
-                Usuario usuario = new Usuario();
+                    usuario.setId(resultado.getInt("id"));
+                    usuario.setNome(resultado.getString("nome"));
+                    usuario.setLogin(resultado.getString("login"));
+                    usuario.setSenha(resultado.getString("senha"));
+                    try {
+                        usuario.setEmail(resultado.getString("email"));
+                    } catch (SQLException ignored) {
+                    }
 
-                usuario.setId(resultado.getInt("id"));
-                usuario.setNome(resultado.getString("nome"));
-                usuario.setLogin(resultado.getString("login"));
-                usuario.setSenha(resultado.getString("senha"));
-
-                return usuario;
+                    return usuario;
+                }
             }
-
-            stmt.close();
-            conexao.close();
 
         } catch (SQLException e) {
             System.out.println("Erro ao realizar Login: " + e.getMessage());
@@ -79,29 +72,24 @@ public class UsuarioDao {
         return null;
     }
 
-
-
     public boolean atualizarDados(Usuario usuario) {
 
-        String sql =
-                "UPDATE usuarios SET nome = ?, login = ? WHERE id = ?";
+        String sql = "UPDATE usuarios SET nome = ?, login = ?, email = ? WHERE id = ?";
 
         try (Connection conexao = Conexao.conectar();
              PreparedStatement stmt = conexao.prepareStatement(sql)) {
 
             stmt.setString(1, usuario.getNome());
             stmt.setString(2, usuario.getLogin());
-            stmt.setInt(3, usuario.getId());
+            stmt.setString(3, usuario.getEmail());
+            stmt.setInt(4, usuario.getId());
 
             stmt.executeUpdate();
-
             return true;
 
         } catch (SQLException e) {
 
-            System.out.println(
-                    "Erro ao atualizar usuário: " + e.getMessage()
-            );
+            System.out.println("Erro ao atualizar usuário: " + e.getMessage());
 
             if (e.getErrorCode() == 1062) {
                 JOptionPane.showMessageDialog(
@@ -118,7 +106,4 @@ public class UsuarioDao {
             return false;
         }
     }
-
-
-
 }

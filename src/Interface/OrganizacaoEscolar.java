@@ -49,6 +49,10 @@ public class OrganizacaoEscolar extends JFrame {
     private JLabel labelTotalPresentes;
     private JLabel labelTotalFaltas;
     private JLabel labelTaxaPresenca;
+    private JLabel labelTituloCardTotal;
+    private JLabel labelTituloCardPresentes;
+    private JLabel labelTituloCardFaltas;
+    private JLabel labelTituloCardTaxa;
 
     // Tabela e Modelo
     private JTable tabela;
@@ -168,15 +172,20 @@ public class OrganizacaoEscolar extends JFrame {
         labelTotalFaltas = new JLabel("0");
         labelTaxaPresenca = new JLabel("0%");
 
-        painel.add(criarCardMetrica("Total de registros", labelTotalRegistros, AZUL, Configuracoes.getCorDestaque()));
-        painel.add(criarCardMetrica("Presenças", labelTotalPresentes, VERDE, VERDE_FUNDO));
-        painel.add(criarCardMetrica("Faltas", labelTotalFaltas, VERMELHO, VERMELHO_FUNDO));
-        painel.add(criarCardMetrica("Índice de presença", labelTaxaPresenca, new Color(99, 102, 241), Configuracoes.isModoEscuro() ? new Color(30, 41, 59) : new Color(238, 242, 255)));
+        labelTituloCardTotal = new JLabel("TOTAL NO DIA");
+        labelTituloCardPresentes = new JLabel("PRESENTES NO DIA");
+        labelTituloCardFaltas = new JLabel("FALTAS NO DIA");
+        labelTituloCardTaxa = new JLabel("ÍNDICE DE PRESENÇA");
+
+        painel.add(criarCardMetrica(labelTituloCardTotal, labelTotalRegistros, AZUL, Configuracoes.getCorDestaque()));
+        painel.add(criarCardMetrica(labelTituloCardPresentes, labelTotalPresentes, VERDE, VERDE_FUNDO));
+        painel.add(criarCardMetrica(labelTituloCardFaltas, labelTotalFaltas, VERMELHO, VERMELHO_FUNDO));
+        painel.add(criarCardMetrica(labelTituloCardTaxa, labelTaxaPresenca, new Color(99, 102, 241), Configuracoes.isModoEscuro() ? new Color(30, 41, 59) : new Color(238, 242, 255)));
 
         return painel;
     }
 
-    private JPanel criarCardMetrica(String titulo, JLabel valorLabel, Color corDestaque, Color corFundoBadge) {
+    private JPanel criarCardMetrica(JLabel tituloLabel, JLabel valorLabel, Color corDestaque, Color corFundoBadge) {
         JPanel card = new JPanel(new BorderLayout(0, 6));
         card.setBackground(BRANCO);
         card.setBorder(
@@ -186,7 +195,6 @@ public class OrganizacaoEscolar extends JFrame {
                 )
         );
 
-        JLabel tituloLabel = new JLabel(titulo.toUpperCase());
         tituloLabel.setFont(new Font("Segoe UI", Font.BOLD, 10));
         tituloLabel.setForeground(CINZA);
 
@@ -401,7 +409,7 @@ public class OrganizacaoEscolar extends JFrame {
     // CONFIGURAÇÃO DA TABELA
     private void criarTabela() {
         modelo = new DefaultTableModel(
-                new Object[]{"ID", "Data", "Nome do aluno", "Turma / Sala", "Situação"},
+                new Object[]{"ID", "Data", "Nome do aluno", "Faltas do Aluno", "Turma / Sala", "Situação"},
                 0
         ) {
             @Override
@@ -417,9 +425,9 @@ public class OrganizacaoEscolar extends JFrame {
         tabela.setRowHeight(38);
         tabela.setShowVerticalLines(false);
         tabela.setShowHorizontalLines(true);
-        tabela.setGridColor(new Color(241, 245, 249));
-        tabela.setSelectionBackground(new Color(219, 234, 254));
-        tabela.setSelectionForeground(TEXTO);
+        tabela.setGridColor(Configuracoes.isModoEscuro() ? new Color(45, 45, 52) : new Color(241, 245, 249));
+        tabela.setSelectionBackground(Configuracoes.isModoEscuro() ? new Color(30, 58, 138) : new Color(219, 234, 254));
+        tabela.setSelectionForeground(Configuracoes.isModoEscuro() ? Color.WHITE : TEXTO);
         tabela.setFillsViewportHeight(true);
         tabela.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tabela.setAutoCreateRowSorter(true);
@@ -427,16 +435,17 @@ public class OrganizacaoEscolar extends JFrame {
         JTableHeader cabecalho = tabela.getTableHeader();
         cabecalho.setFont(new Font("Segoe UI", Font.BOLD, 13));
         cabecalho.setForeground(TEXTO);
-        cabecalho.setBackground(new Color(241, 245, 249));
+        cabecalho.setBackground(Configuracoes.isModoEscuro() ? new Color(35, 35, 40) : new Color(241, 245, 249));
         cabecalho.setPreferredSize(new Dimension(0, 42));
         cabecalho.setReorderingAllowed(false);
 
         // Larguras das colunas
         tabela.getColumnModel().getColumn(0).setPreferredWidth(60);   // ID
-        tabela.getColumnModel().getColumn(1).setPreferredWidth(110);  // Data
-        tabela.getColumnModel().getColumn(2).setPreferredWidth(380);  // Nome
-        tabela.getColumnModel().getColumn(3).setPreferredWidth(210);  // Turma
-        tabela.getColumnModel().getColumn(4).setPreferredWidth(140);  // Situação
+        tabela.getColumnModel().getColumn(1).setPreferredWidth(105);  // Data
+        tabela.getColumnModel().getColumn(2).setPreferredWidth(340);  // Nome do aluno
+        tabela.getColumnModel().getColumn(3).setPreferredWidth(140);  // Faltas do Aluno (ao lado do nome)
+        tabela.getColumnModel().getColumn(4).setPreferredWidth(200);  // Turma / Sala
+        tabela.getColumnModel().getColumn(5).setPreferredWidth(130);  // Situação
 
         // Alinhamento central para ID e Data
         DefaultTableCellRenderer centralRenderer = new DefaultTableCellRenderer();
@@ -444,8 +453,49 @@ public class OrganizacaoEscolar extends JFrame {
         tabela.getColumnModel().getColumn(0).setCellRenderer(centralRenderer);
         tabela.getColumnModel().getColumn(1).setCellRenderer(centralRenderer);
 
+        // Renderer customizado para a coluna Faltas do Aluno (ao lado do nome)
+        tabela.getColumnModel().getColumn(3).setCellRenderer(new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(
+                    JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column
+            ) {
+                JLabel label = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                label.setHorizontalAlignment(SwingConstants.CENTER);
+                label.setFont(new Font("Segoe UI", Font.BOLD, 12));
+
+                int faltas = 0;
+                if (value instanceof Number n) {
+                    faltas = n.intValue();
+                } else if (value != null) {
+                    try {
+                        faltas = Integer.parseInt(value.toString().replaceAll("\\D+", ""));
+                    } catch (Exception ignored) {}
+                }
+
+                String texto = faltas == 1 ? "1 falta" : faltas + " faltas";
+                label.setText(texto);
+
+                if (!isSelected) {
+                    boolean dark = Configuracoes.isModoEscuro();
+                    if (faltas == 0) {
+                        label.setForeground(dark ? new Color(74, 222, 128) : new Color(22, 163, 74));
+                        label.setBackground(dark ? new Color(20, 50, 30) : new Color(240, 253, 244));
+                    } else if (faltas == 1) {
+                        label.setForeground(dark ? new Color(251, 191, 36) : new Color(217, 119, 6));
+                        label.setBackground(dark ? new Color(60, 45, 15) : new Color(254, 243, 199));
+                    } else {
+                        label.setForeground(dark ? new Color(248, 113, 113) : new Color(185, 28, 28));
+                        label.setBackground(dark ? new Color(69, 10, 10) : new Color(254, 226, 226));
+                    }
+                }
+
+                label.setOpaque(true);
+                return label;
+            }
+        });
+
         // Renderer customizado para a coluna Situação (Badges verde/vermelho)
-        tabela.getColumnModel().getColumn(4).setCellRenderer(new DefaultTableCellRenderer() {
+        tabela.getColumnModel().getColumn(5).setCellRenderer(new DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(
                     JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column
@@ -456,12 +506,12 @@ public class OrganizacaoEscolar extends JFrame {
 
                 String situacao = value != null ? value.toString() : "";
                 if ("Presente".equalsIgnoreCase(situacao)) {
-                    label.setForeground(new Color(21, 128, 61));
+                    label.setForeground(Configuracoes.isModoEscuro() ? new Color(74, 222, 128) : new Color(21, 128, 61));
                     if (!isSelected) {
                         label.setBackground(VERDE_FUNDO);
                     }
                 } else if ("Falta".equalsIgnoreCase(situacao)) {
-                    label.setForeground(new Color(185, 28, 28));
+                    label.setForeground(Configuracoes.isModoEscuro() ? new Color(248, 113, 113) : new Color(185, 28, 28));
                     if (!isSelected) {
                         label.setBackground(VERMELHO_FUNDO);
                     }
@@ -678,27 +728,66 @@ public class OrganizacaoEscolar extends JFrame {
                         f.getId(),
                         dataStr,
                         f.getAlunoNome() != null ? f.getAlunoNome() : "Aluno ID " + f.getAlunoId(),
+                        f.getTotalFaltasAluno(),
                         f.getSalaNome() != null ? f.getSalaNome() : "-",
                         situacao
                 });
             }
         }
 
-        // Atualiza métricas
-        labelTotalRegistros.setText(String.valueOf(total));
-        labelTotalPresentes.setText(String.valueOf(presentes));
-        labelTotalFaltas.setText(String.valueOf(faltas));
+        Date dataFiltro = resolverDataFiltro();
 
-        if (total > 0) {
-            double percentual = (presentes * 100.0) / total;
-            labelTaxaPresenca.setText(String.format("%.1f%%", percentual));
+        if (dataFiltro != null) {
+            String dataFiltroStr = dataFiltro.toLocalDate().format(FORMATO_BR);
+            int presentesNoDia = presentes;
+            int faltasNoDia = faltas;
+            int totalNoDia = total;
+
+            if (labelTituloCardTotal != null) labelTituloCardTotal.setText("TOTAL NO DIA (" + dataFiltroStr + ")");
+            if (labelTituloCardPresentes != null) labelTituloCardPresentes.setText("PRESENTES NO DIA (" + dataFiltroStr + ")");
+            if (labelTituloCardFaltas != null) labelTituloCardFaltas.setText("FALTAS NO DIA (" + dataFiltroStr + ")");
+            if (labelTituloCardTaxa != null) labelTituloCardTaxa.setText("ÍNDICE NO DIA");
+
+            labelTotalRegistros.setText(String.valueOf(totalNoDia));
+            labelTotalPresentes.setText(String.valueOf(presentesNoDia));
+            labelTotalFaltas.setText(String.valueOf(faltasNoDia));
+
+            if (totalNoDia > 0) {
+                double percentual = (presentesNoDia * 100.0) / totalNoDia;
+                labelTaxaPresenca.setText(String.format("%.1f%%", percentual));
+            } else {
+                labelTaxaPresenca.setText("0%");
+            }
+
+            labelRodapeInfo.setText(
+                    "Data: " + dataFiltroStr + " — Total de presentes no dia: " + presentesNoDia
+                            + " | Faltas no dia: " + faltasNoDia + " (Total listado: " + totalNoDia + ")."
+            );
         } else {
-            labelTaxaPresenca.setText("0%");
-        }
+            int presentesHoje = frequenciaDao.contarPresentesHoje();
+            String hojeFormatado = LocalDate.now().format(FORMATO_BR);
 
-        labelRodapeInfo.setText(
-                "Mostrando " + total + " registro(s) (" + presentes + " presenças, " + faltas + " faltas)."
-        );
+            if (labelTituloCardTotal != null) labelTituloCardTotal.setText("TOTAL DE REGISTROS");
+            if (labelTituloCardPresentes != null) labelTituloCardPresentes.setText("PRESENTES NO DIA (" + hojeFormatado + ")");
+            if (labelTituloCardFaltas != null) labelTituloCardFaltas.setText("FALTAS NO HISTÓRICO");
+            if (labelTituloCardTaxa != null) labelTituloCardTaxa.setText("ÍNDICE GERAL");
+
+            labelTotalRegistros.setText(String.valueOf(total));
+            labelTotalPresentes.setText(String.valueOf(presentesHoje));
+            labelTotalFaltas.setText(String.valueOf(faltas));
+
+            if (total > 0) {
+                double percentual = (presentes * 100.0) / total;
+                labelTaxaPresenca.setText(String.format("%.1f%%", percentual));
+            } else {
+                labelTaxaPresenca.setText("0%");
+            }
+
+            labelRodapeInfo.setText(
+                    "Mostrando " + total + " registro(s) — Total de presentes no dia de hoje (" + hojeFormatado + "): "
+                            + presentesHoje + " presentes (" + faltas + " faltas no histórico geral)."
+            );
+        }
     }
 
     // AÇÕES: ALTERNAR PRESENÇA / EXCLUIR REGISTRO
@@ -717,7 +806,7 @@ public class OrganizacaoEscolar extends JFrame {
         int linhaModelo = tabela.convertRowIndexToModel(linhaSelecionada);
         int frequenciaId = (int) modelo.getValueAt(linhaModelo, 0);
         String alunoNome = String.valueOf(modelo.getValueAt(linhaModelo, 2));
-        String situacaoAtual = String.valueOf(modelo.getValueAt(linhaModelo, 4));
+        String situacaoAtual = String.valueOf(modelo.getValueAt(linhaModelo, 5));
 
         boolean novaSituacao = !"Presente".equalsIgnoreCase(situacaoAtual);
         String novoTexto = novaSituacao ? "Presente" : "Falta";
