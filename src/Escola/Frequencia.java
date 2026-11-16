@@ -1,6 +1,8 @@
 package Escola;
 
 import java.sql.Date;
+import java.sql.Timestamp;
+import java.time.format.DateTimeFormatter;
 
 public class Frequencia {
 
@@ -8,6 +10,8 @@ public class Frequencia {
     private int alunoId;
     private Date data;
     private Boolean presente;
+    private Timestamp entradaHora;
+    private Timestamp saidaHora;
     private String alunoNome;
     private String salaNome;
     private int totalFaltasAluno;
@@ -63,6 +67,36 @@ public class Frequencia {
         this.presente = presente;
     }
 
+    public Timestamp getEntradaHora() {
+        return entradaHora;
+    }
+
+    public void setEntradaHora(Timestamp entradaHora) {
+        this.entradaHora = entradaHora;
+    }
+
+    public String getEntradaHoraFormatada() {
+        if (entradaHora == null) {
+            return "—";
+        }
+        return entradaHora.toLocalDateTime().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
+    }
+
+    public Timestamp getSaidaHora() {
+        return saidaHora;
+    }
+
+    public void setSaidaHora(Timestamp saidaHora) {
+        this.saidaHora = saidaHora;
+    }
+
+    public String getSaidaHoraFormatada() {
+        if (saidaHora == null) {
+            return "—";
+        }
+        return saidaHora.toLocalDateTime().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
+    }
+
     public String getAlunoNome() {
         return alunoNome;
     }
@@ -87,3 +121,4 @@ public class Frequencia {
         this.totalFaltasAluno = totalFaltasAluno;
     }
 }
+

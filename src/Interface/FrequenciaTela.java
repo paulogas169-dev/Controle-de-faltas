@@ -43,6 +43,7 @@ public class FrequenciaTela extends JFrame {
     private JLabel labelFoto;
     private JLabel labelNomeAluno;
     private JLabel labelSalaAluno;
+    private JLabel labelHoraEntrada;
     private JLabel labelStatusRFID;
 
     private JButton btnManual;
@@ -259,6 +260,12 @@ public class FrequenciaTela extends JFrame {
         labelSalaAluno.setForeground(new Color(71, 85, 105));
         labelSalaAluno.setAlignmentX(Component.LEFT_ALIGNMENT);
 
+        JLabel legendaHora = criarLegendaRFID("HORÁRIO DE ENTRADA");
+        labelHoraEntrada = new JLabel("—:—:—");
+        labelHoraEntrada.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        labelHoraEntrada.setForeground(AZUL);
+        labelHoraEntrada.setAlignmentX(Component.LEFT_ALIGNMENT);
+
         JPanel caixaStatus = new JPanel(new BorderLayout(12, 0));
         caixaStatus.setBackground(new Color(239, 246, 255));
         caixaStatus.setBorder(BorderFactory.createCompoundBorder(
@@ -276,19 +283,23 @@ public class FrequenciaTela extends JFrame {
         caixaStatus.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         colunaDados.add(selo);
-        colunaDados.add(Box.createVerticalStrut(20));
+        colunaDados.add(Box.createVerticalStrut(18));
         colunaDados.add(tituloRFID);
-        colunaDados.add(Box.createVerticalStrut(8));
+        colunaDados.add(Box.createVerticalStrut(6));
         colunaDados.add(instrucao);
-        colunaDados.add(Box.createVerticalStrut(36));
+        colunaDados.add(Box.createVerticalStrut(28));
         colunaDados.add(legendaNome);
-        colunaDados.add(Box.createVerticalStrut(8));
+        colunaDados.add(Box.createVerticalStrut(6));
         colunaDados.add(labelNomeAluno);
-        colunaDados.add(Box.createVerticalStrut(24));
+        colunaDados.add(Box.createVerticalStrut(18));
         colunaDados.add(legendaTurma);
-        colunaDados.add(Box.createVerticalStrut(8));
+        colunaDados.add(Box.createVerticalStrut(6));
         colunaDados.add(labelSalaAluno);
-        colunaDados.add(Box.createVerticalStrut(34));
+        colunaDados.add(Box.createVerticalStrut(18));
+        colunaDados.add(legendaHora);
+        colunaDados.add(Box.createVerticalStrut(6));
+        colunaDados.add(labelHoraEntrada);
+        colunaDados.add(Box.createVerticalStrut(24));
         colunaDados.add(caixaStatus);
         colunaDados.add(Box.createVerticalGlue());
 
@@ -362,6 +373,7 @@ public class FrequenciaTela extends JFrame {
                     limparIdentificacao();
                     labelNomeAluno.setText("Aluno não encontrado");
                     labelSalaAluno.setText("Cartão não cadastrado");
+                    labelHoraEntrada.setText("—:—:—");
                     labelStatusRFID.setText(
                             "Verifique o cadastro do cartão no sistema."
                     );
@@ -381,11 +393,9 @@ public class FrequenciaTela extends JFrame {
         final String salaExibicao = nomeSala;
 
         FrequenciaDao frequenciaDao = new FrequenciaDao();
-        boolean registrado = frequenciaDao.registrarPresencaRFID(
+        FrequenciaDao.ResultadoPresenca resultado = frequenciaDao.registrarPresencaRFIDDetalhado(
                 aluno.getId()
         );
-
-        final boolean sucesso = registrado;
 
         SwingUtilities.invokeLater(() -> {
             if (telaFechada) {
@@ -394,20 +404,20 @@ public class FrequenciaTela extends JFrame {
 
             mostrarAluno(aluno, salaExibicao);
 
-            if (sucesso) {
-                labelStatusRFID.setText(
-                        "Presença registrada com sucesso!"
-                );
-                labelStatusRFID.setForeground(
-                        new Color(22, 163, 74)
-                );
+            if (resultado.isSucesso()) {
+                labelHoraEntrada.setText(resultado.getHoraFormatada());
+                labelHoraEntrada.setForeground(AZUL);
+                labelStatusRFID.setText(resultado.getMensagem());
+                labelStatusRFID.setForeground(new Color(22, 163, 74));
+            } else if (resultado.isJaRegistrada()) {
+                labelHoraEntrada.setText(resultado.getHoraFormatada());
+                labelHoraEntrada.setForeground(new Color(217, 119, 6));
+                labelStatusRFID.setText(resultado.getMensagem());
+                labelStatusRFID.setForeground(new Color(217, 119, 6));
             } else {
-                labelStatusRFID.setText(
-                        "Presença já registrada ou falha ao salvar."
-                );
-                labelStatusRFID.setForeground(
-                        new Color(217, 119, 6)
-                );
+                labelHoraEntrada.setText("—:—:—");
+                labelStatusRFID.setText(resultado.getMensagem());
+                labelStatusRFID.setForeground(Color.RED);
             }
         });
     }
@@ -509,6 +519,7 @@ public class FrequenciaTela extends JFrame {
         labelFoto.setText("Foto do aluno");
         labelNomeAluno.setText("Aguardando identificação...");
         labelSalaAluno.setText("Turma: —");
+        labelHoraEntrada.setText("—:—:—");
     }
 
     // PAINEL DA FREQUÊNCIA MANUAL
@@ -857,10 +868,13 @@ public class FrequenciaTela extends JFrame {
 
                 boolean presente = escolha.equals("Presente");
 
+                java.sql.Timestamp agora = java.sql.Timestamp.valueOf(java.time.LocalDateTime.now());
+
                 Frequencia frequencia = new Frequencia();
                 frequencia.setAlunoId(alunoId);
                 frequencia.setData(data);
                 frequencia.setPresente(presente);
+                frequencia.setEntradaHora(presente ? agora : null);
 
                 if (frequenciaDao.salvar(frequencia)) {
                     salvos++;

@@ -4,6 +4,7 @@ import DAO.FrequenciaDao;
 import DAO.SalaDao;
 import Escola.Frequencia;
 import Escola.Sala;
+import Servico.ServicoFaltaAutomatica;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -16,7 +17,6 @@ import java.sql.Date;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
 import java.util.List;
 
 import com.formdev.flatlaf.FlatClientProperties;
@@ -24,16 +24,19 @@ import com.formdev.flatlaf.FlatClientProperties;
 public class OrganizacaoEscolar extends JFrame {
 
     private final Color AZUL = new Color(37, 99, 235);
-    private final Color AZUL_ESCURO = new Color(20, 43, 74);
     private final Color TEXTO = Configuracoes.getCorTexto();
     private final Color CINZA = Configuracoes.getCorSubtexto();
     private final Color FUNDO = Configuracoes.getCorFundo();
     private final Color BRANCO = Configuracoes.getCorPainel();
     private final Color BORDA = Configuracoes.getCorBorda();
     private final Color VERDE = new Color(22, 163, 74);
-    private final Color VERDE_FUNDO = Configuracoes.isModoEscuro() ? new Color(20, 83, 45) : new Color(220, 252, 231);
+    private final Color VERDE_FUNDO = new Color(220, 252, 231);
     private final Color VERMELHO = new Color(220, 38, 38);
-    private final Color VERMELHO_FUNDO = Configuracoes.isModoEscuro() ? new Color(127, 29, 29) : new Color(254, 226, 226);
+    private final Color VERMELHO_FUNDO = new Color(254, 226, 226);
+    private final Color ROXO = new Color(99, 102, 241);
+    private final Color ROXO_FUNDO = new Color(238, 242, 255);
+    private final Color ESMERALDA = new Color(5, 150, 105);
+    private final Color ESMERALDA_FUNDO = new Color(209, 250, 229);
 
     private final DateTimeFormatter FORMATO_BR = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
@@ -47,10 +50,12 @@ public class OrganizacaoEscolar extends JFrame {
     // Componentes de métricas / cartões
     private JLabel labelTotalRegistros;
     private JLabel labelTotalPresentes;
+    private JLabel labelTotalSaidas;
     private JLabel labelTotalFaltas;
     private JLabel labelTaxaPresenca;
     private JLabel labelTituloCardTotal;
     private JLabel labelTituloCardPresentes;
+    private JLabel labelTituloCardSaidas;
     private JLabel labelTituloCardFaltas;
     private JLabel labelTituloCardTaxa;
 
@@ -64,11 +69,14 @@ public class OrganizacaoEscolar extends JFrame {
     private final SalaDao salaDao = new SalaDao();
 
     public OrganizacaoEscolar() {
-        setTitle("Controle de Faltas | Organização Escolar - Consulta de Frequência");
-        setSize(1300, 750);
-        setMinimumSize(new Dimension(950, 640));
+        setTitle("Controle de Faltas | Organização Escolar - Consulta de Frequência, Entrada e Saída");
+        setSize(1360, 780);
+        setMinimumSize(new Dimension(1020, 660));
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
+
+        // Verifica e aplica faltas automáticas para dias anteriores pendentes
+        ServicoFaltaAutomatica.verificarDiasPassados();
 
         JPanel principal = new JPanel(new BorderLayout());
         principal.setBackground(FUNDO);
@@ -140,7 +148,7 @@ public class OrganizacaoEscolar extends JFrame {
         titulo.setFont(new Font("Segoe UI", Font.BOLD, 25));
         titulo.setForeground(TEXTO);
 
-        JLabel subtitulo = new JLabel("Consulta de frequência e acompanhamento diário das turmas.");
+        JLabel subtitulo = new JLabel("Acompanhamento de frequência, horários de entrada e saída por aluno.");
         subtitulo.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         subtitulo.setForeground(CINZA);
 
@@ -148,7 +156,7 @@ public class OrganizacaoEscolar extends JFrame {
         textos.add(Box.createVerticalStrut(5));
         textos.add(subtitulo);
 
-        JLabel etiqueta = new JLabel("  CONSULTA DE FREQUÊNCIA  ");
+        JLabel etiqueta = new JLabel("  ENTRADA, SAÍDA & FREQUÊNCIA  ");
         etiqueta.setFont(new Font("Segoe UI", Font.BOLD, 11));
         etiqueta.setForeground(Configuracoes.getCorTextoDestaque());
         etiqueta.setOpaque(true);
@@ -164,23 +172,26 @@ public class OrganizacaoEscolar extends JFrame {
 
     // CARDS DE MÉTRICAS / RESUMO
     private JPanel criarPainelMetricas() {
-        JPanel painel = new JPanel(new GridLayout(1, 4, 15, 0));
+        JPanel painel = new JPanel(new GridLayout(1, 5, 12, 0));
         painel.setOpaque(false);
 
         labelTotalRegistros = new JLabel("0");
         labelTotalPresentes = new JLabel("0");
+        labelTotalSaidas = new JLabel("0");
         labelTotalFaltas = new JLabel("0");
         labelTaxaPresenca = new JLabel("0%");
 
         labelTituloCardTotal = new JLabel("TOTAL NO DIA");
         labelTituloCardPresentes = new JLabel("PRESENTES NO DIA");
+        labelTituloCardSaidas = new JLabel("SAÍDAS REGISTRADAS");
         labelTituloCardFaltas = new JLabel("FALTAS NO DIA");
         labelTituloCardTaxa = new JLabel("ÍNDICE DE PRESENÇA");
 
         painel.add(criarCardMetrica(labelTituloCardTotal, labelTotalRegistros, AZUL, Configuracoes.getCorDestaque()));
         painel.add(criarCardMetrica(labelTituloCardPresentes, labelTotalPresentes, VERDE, VERDE_FUNDO));
+        painel.add(criarCardMetrica(labelTituloCardSaidas, labelTotalSaidas, ESMERALDA, ESMERALDA_FUNDO));
         painel.add(criarCardMetrica(labelTituloCardFaltas, labelTotalFaltas, VERMELHO, VERMELHO_FUNDO));
-        painel.add(criarCardMetrica(labelTituloCardTaxa, labelTaxaPresenca, new Color(99, 102, 241), Configuracoes.isModoEscuro() ? new Color(30, 41, 59) : new Color(238, 242, 255)));
+        painel.add(criarCardMetrica(labelTituloCardTaxa, labelTaxaPresenca, ROXO, ROXO_FUNDO));
 
         return painel;
     }
@@ -393,7 +404,6 @@ public class OrganizacaoEscolar extends JFrame {
 
         container.add(linhaFiltros, BorderLayout.CENTER);
 
-        // Eventos imediatos para mudanças em combos
         comboDatas.addActionListener(e -> {
             if (comboDatas.getSelectedIndex() > 0 && !campoDataManual.getText().isEmpty()) {
                 campoDataManual.setText("");
@@ -406,10 +416,10 @@ public class OrganizacaoEscolar extends JFrame {
         return container;
     }
 
-    // CONFIGURAÇÃO DA TABELA
+    // CONFIGURAÇÃO DA TABELA COM ENTRADA E SAÍDA
     private void criarTabela() {
         modelo = new DefaultTableModel(
-                new Object[]{"ID", "Data", "Nome do aluno", "Faltas do Aluno", "Turma / Sala", "Situação"},
+                new Object[]{"ID", "Data", "Nome do aluno", "Faltas do Aluno", "Turma / Sala", "Situação", "Entrada", "Saída"},
                 0
         ) {
             @Override
@@ -425,9 +435,9 @@ public class OrganizacaoEscolar extends JFrame {
         tabela.setRowHeight(38);
         tabela.setShowVerticalLines(false);
         tabela.setShowHorizontalLines(true);
-        tabela.setGridColor(Configuracoes.isModoEscuro() ? new Color(45, 45, 52) : new Color(241, 245, 249));
-        tabela.setSelectionBackground(Configuracoes.isModoEscuro() ? new Color(30, 58, 138) : new Color(219, 234, 254));
-        tabela.setSelectionForeground(Configuracoes.isModoEscuro() ? Color.WHITE : TEXTO);
+        tabela.setGridColor(new Color(241, 245, 249));
+        tabela.setSelectionBackground(new Color(219, 234, 254));
+        tabela.setSelectionForeground(TEXTO);
         tabela.setFillsViewportHeight(true);
         tabela.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tabela.setAutoCreateRowSorter(true);
@@ -435,25 +445,26 @@ public class OrganizacaoEscolar extends JFrame {
         JTableHeader cabecalho = tabela.getTableHeader();
         cabecalho.setFont(new Font("Segoe UI", Font.BOLD, 13));
         cabecalho.setForeground(TEXTO);
-        cabecalho.setBackground(Configuracoes.isModoEscuro() ? new Color(35, 35, 40) : new Color(241, 245, 249));
+        cabecalho.setBackground(new Color(241, 245, 249));
         cabecalho.setPreferredSize(new Dimension(0, 42));
         cabecalho.setReorderingAllowed(false);
 
         // Larguras das colunas
-        tabela.getColumnModel().getColumn(0).setPreferredWidth(60);   // ID
-        tabela.getColumnModel().getColumn(1).setPreferredWidth(105);  // Data
-        tabela.getColumnModel().getColumn(2).setPreferredWidth(340);  // Nome do aluno
-        tabela.getColumnModel().getColumn(3).setPreferredWidth(140);  // Faltas do Aluno (ao lado do nome)
-        tabela.getColumnModel().getColumn(4).setPreferredWidth(200);  // Turma / Sala
-        tabela.getColumnModel().getColumn(5).setPreferredWidth(130);  // Situação
+        tabela.getColumnModel().getColumn(0).setPreferredWidth(50);   // ID
+        tabela.getColumnModel().getColumn(1).setPreferredWidth(95);   // Data
+        tabela.getColumnModel().getColumn(2).setPreferredWidth(260);  // Nome do aluno
+        tabela.getColumnModel().getColumn(3).setPreferredWidth(120);  // Faltas do Aluno
+        tabela.getColumnModel().getColumn(4).setPreferredWidth(160);  // Turma / Sala
+        tabela.getColumnModel().getColumn(5).setPreferredWidth(100);  // Situação
+        tabela.getColumnModel().getColumn(6).setPreferredWidth(110);  // Entrada
+        tabela.getColumnModel().getColumn(7).setPreferredWidth(150);  // Saída
 
-        // Alinhamento central para ID e Data
         DefaultTableCellRenderer centralRenderer = new DefaultTableCellRenderer();
         centralRenderer.setHorizontalAlignment(SwingConstants.CENTER);
         tabela.getColumnModel().getColumn(0).setCellRenderer(centralRenderer);
         tabela.getColumnModel().getColumn(1).setCellRenderer(centralRenderer);
 
-        // Renderer customizado para a coluna Faltas do Aluno (ao lado do nome)
+        // Renderer customizado para a coluna Faltas do Aluno
         tabela.getColumnModel().getColumn(3).setCellRenderer(new DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(
@@ -476,16 +487,15 @@ public class OrganizacaoEscolar extends JFrame {
                 label.setText(texto);
 
                 if (!isSelected) {
-                    boolean dark = Configuracoes.isModoEscuro();
                     if (faltas == 0) {
-                        label.setForeground(dark ? new Color(74, 222, 128) : new Color(22, 163, 74));
-                        label.setBackground(dark ? new Color(20, 50, 30) : new Color(240, 253, 244));
+                        label.setForeground(new Color(22, 163, 74));
+                        label.setBackground(new Color(240, 253, 244));
                     } else if (faltas == 1) {
-                        label.setForeground(dark ? new Color(251, 191, 36) : new Color(217, 119, 6));
-                        label.setBackground(dark ? new Color(60, 45, 15) : new Color(254, 243, 199));
+                        label.setForeground(new Color(217, 119, 6));
+                        label.setBackground(new Color(254, 243, 199));
                     } else {
-                        label.setForeground(dark ? new Color(248, 113, 113) : new Color(185, 28, 28));
-                        label.setBackground(dark ? new Color(69, 10, 10) : new Color(254, 226, 226));
+                        label.setForeground(new Color(185, 28, 28));
+                        label.setBackground(new Color(254, 226, 226));
                     }
                 }
 
@@ -506,14 +516,73 @@ public class OrganizacaoEscolar extends JFrame {
 
                 String situacao = value != null ? value.toString() : "";
                 if ("Presente".equalsIgnoreCase(situacao)) {
-                    label.setForeground(Configuracoes.isModoEscuro() ? new Color(74, 222, 128) : new Color(21, 128, 61));
+                    label.setForeground(new Color(21, 128, 61));
                     if (!isSelected) {
                         label.setBackground(VERDE_FUNDO);
                     }
                 } else if ("Falta".equalsIgnoreCase(situacao)) {
-                    label.setForeground(Configuracoes.isModoEscuro() ? new Color(248, 113, 113) : new Color(185, 28, 28));
+                    label.setForeground(new Color(185, 28, 28));
                     if (!isSelected) {
                         label.setBackground(VERMELHO_FUNDO);
+                    }
+                }
+
+                label.setOpaque(true);
+                return label;
+            }
+        });
+
+        // Renderer customizado para a coluna Horário de Entrada
+        tabela.getColumnModel().getColumn(6).setCellRenderer(new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(
+                    JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column
+            ) {
+                JLabel label = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                label.setHorizontalAlignment(SwingConstants.CENTER);
+                label.setFont(new Font("Segoe UI", Font.BOLD, 12));
+
+                String texto = value != null ? value.toString() : "—";
+                label.setText(texto);
+
+                if (!isSelected) {
+                    if (texto.contains(":")) {
+                        label.setForeground(new Color(37, 99, 235)); // Azul
+                        label.setBackground(new Color(239, 246, 255));
+                    } else {
+                        label.setForeground(CINZA);
+                        label.setBackground(BRANCO);
+                    }
+                }
+
+                label.setOpaque(true);
+                return label;
+            }
+        });
+
+        // Renderer customizado para a coluna Horário de Saída
+        tabela.getColumnModel().getColumn(7).setCellRenderer(new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(
+                    JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column
+            ) {
+                JLabel label = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                label.setHorizontalAlignment(SwingConstants.CENTER);
+                label.setFont(new Font("Segoe UI", Font.BOLD, 12));
+
+                String texto = value != null ? value.toString() : "—";
+                label.setText(texto);
+
+                if (!isSelected) {
+                    if (texto.contains(":") && !texto.contains("Pendente")) {
+                        label.setForeground(new Color(5, 150, 105)); // Verde esmeralda (Saída confirmada)
+                        label.setBackground(new Color(236, 253, 245));
+                    } else if (texto.contains("Pendente")) {
+                        label.setForeground(new Color(217, 119, 6)); // Laranja (Pendente)
+                        label.setBackground(new Color(254, 243, 199));
+                    } else {
+                        label.setForeground(CINZA);
+                        label.setBackground(BRANCO);
                     }
                 }
 
@@ -532,8 +601,31 @@ public class OrganizacaoEscolar extends JFrame {
         labelRodapeInfo.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         labelRodapeInfo.setForeground(CINZA);
 
-        JPanel acoes = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        JPanel acoes = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
         acoes.setOpaque(false);
+
+        // Botão para Limpar Todos os Registros
+        JButton btnLimparTudo = new JButton("Limpar Todos os Registros");
+        btnLimparTudo.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        btnLimparTudo.setForeground(new Color(153, 27, 27));
+        btnLimparTudo.setBackground(new Color(254, 226, 226));
+        btnLimparTudo.setFocusPainted(false);
+        btnLimparTudo.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnLimparTudo.setPreferredSize(new Dimension(190, 40));
+        btnLimparTudo.putClientProperty(FlatClientProperties.STYLE, "arc:10;focusWidth:0;borderWidth:0");
+        btnLimparTudo.setToolTipText("Exclui todos os registros de presença e faltas salvos no banco de dados.");
+        btnLimparTudo.addActionListener(e -> limparTodosRegistros());
+
+        JButton btnFaltaSemSaida = new JButton("Aplicar Falta Sem Saída");
+        btnFaltaSemSaida.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        btnFaltaSemSaida.setForeground(new Color(185, 28, 28));
+        btnFaltaSemSaida.setBackground(new Color(254, 242, 242));
+        btnFaltaSemSaida.setFocusPainted(false);
+        btnFaltaSemSaida.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnFaltaSemSaida.setPreferredSize(new Dimension(185, 40));
+        btnFaltaSemSaida.putClientProperty(FlatClientProperties.STYLE, "arc:10;focusWidth:0;borderWidth:0");
+        btnFaltaSemSaida.setToolTipText("Dá falta automaticamente aos alunos que registraram presença mas não registraram saída na data selecionada.");
+        btnFaltaSemSaida.addActionListener(e -> executarFaltaSemSaida());
 
         JButton btnAlternar = new JButton("Alternar Presença/Falta");
         btnAlternar.setFont(new Font("Segoe UI", Font.BOLD, 12));
@@ -541,7 +633,7 @@ public class OrganizacaoEscolar extends JFrame {
         btnAlternar.setBackground(new Color(239, 246, 255));
         btnAlternar.setFocusPainted(false);
         btnAlternar.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btnAlternar.setPreferredSize(new Dimension(185, 40));
+        btnAlternar.setPreferredSize(new Dimension(165, 40));
         btnAlternar.putClientProperty(FlatClientProperties.STYLE, "arc:10;focusWidth:0;borderWidth:0");
         btnAlternar.addActionListener(e -> alternarPresencaSelecionada());
 
@@ -551,7 +643,7 @@ public class OrganizacaoEscolar extends JFrame {
         btnExcluir.setBackground(new Color(254, 242, 242));
         btnExcluir.setFocusPainted(false);
         btnExcluir.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btnExcluir.setPreferredSize(new Dimension(140, 40));
+        btnExcluir.setPreferredSize(new Dimension(125, 40));
         btnExcluir.putClientProperty(FlatClientProperties.STYLE, "arc:10;focusWidth:0;borderWidth:0");
         btnExcluir.addActionListener(e -> excluirRegistroSelecionado());
 
@@ -561,13 +653,16 @@ public class OrganizacaoEscolar extends JFrame {
         btnAtualizar.setBackground(AZUL);
         btnAtualizar.setFocusPainted(false);
         btnAtualizar.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btnAtualizar.setPreferredSize(new Dimension(140, 40));
+        btnAtualizar.setPreferredSize(new Dimension(125, 40));
         btnAtualizar.putClientProperty(FlatClientProperties.STYLE, "arc:10;focusWidth:0;borderWidth:0");
         btnAtualizar.addActionListener(e -> {
+            ServicoFaltaAutomatica.verificarDiasPassados();
             carregarDatasNoCombo();
             executarConsulta();
         });
 
+        acoes.add(btnLimparTudo);
+        acoes.add(btnFaltaSemSaida);
         acoes.add(btnAlternar);
         acoes.add(btnExcluir);
         acoes.add(btnAtualizar);
@@ -576,6 +671,70 @@ public class OrganizacaoEscolar extends JFrame {
         rodape.add(acoes, BorderLayout.EAST);
 
         return rodape;
+    }
+
+    private void limparTodosRegistros() {
+        int confirm = JOptionPane.showConfirmDialog(
+                this,
+                "⚠️ ATENÇÃO: Esta ação apagará permanentemente TODOS os registros\n"
+                        + "de presença e faltas de todos os alunos no sistema!\n\n"
+                        + "Deseja realmente continuar e limpar todos os registros?",
+                "Confirmar Limpeza Total",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE
+        );
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            boolean sucesso = frequenciaDao.limparTodosOsRegistros();
+            if (sucesso) {
+                carregarDatasNoCombo();
+                executarConsulta();
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Todos os registros de presença e faltas foram limpos com sucesso!",
+                        "Registros Limpos",
+                        JOptionPane.INFORMATION_MESSAGE
+                );
+            } else {
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Erro ao tentar limpar registros no banco de dados.",
+                        "Erro",
+                        JOptionPane.ERROR_MESSAGE
+                );
+            }
+        }
+    }
+
+    private void executarFaltaSemSaida() {
+        Date dataAlvo = resolverDataFiltro();
+        if (dataAlvo == null) {
+            dataAlvo = Date.valueOf(LocalDate.now());
+        }
+        String dataStr = dataAlvo.toLocalDate().format(FORMATO_BR);
+
+        int confirm = JOptionPane.showConfirmDialog(
+                this,
+                "Deseja aplicar falta automática para todos os alunos que registraram presença\n"
+                        + "mas NÃO registraram horário de saída na data " + dataStr + "?\n\n"
+                        + "O status deles será alterado para 'Falta'.",
+                "Confirmar Falta Automática",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE
+        );
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            int alterados = frequenciaDao.aplicarFaltaSemSaidaNaData(dataAlvo);
+            frequenciaDao.aplicarFaltaAutomaticaDiasAnteriores();
+            executarConsulta();
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Processamento concluído com sucesso!\n"
+                            + alterados + " aluno(s) sem registro de saída receberam falta.",
+                    "Falta automática aplicada",
+                    JOptionPane.INFORMATION_MESSAGE
+            );
+        }
     }
 
     // CARREGAR DADOS INICIAIS NOS FILTROS
@@ -598,18 +757,16 @@ public class OrganizacaoEscolar extends JFrame {
         if (datasRegistradas != null) {
             for (Date d : datasRegistradas) {
                 String dFormatada = d.toLocalDate().format(FORMATO_BR);
-                String item = dFormatada;
                 if (dFormatada.equals(hojeFormatado)) {
-                    continue; // Já adicionado como Hoje
+                    continue;
                 }
-                comboDatas.addItem(item);
+                comboDatas.addItem(dFormatada);
             }
         }
 
         if (itemSelecionado != null) {
             comboDatas.setSelectedItem(itemSelecionado);
         } else {
-            // Se hoje estiver na lista com registros ou por padrão selecionamos "Todas as datas"
             comboDatas.setSelectedIndex(0);
         }
     }
@@ -629,7 +786,6 @@ public class OrganizacaoEscolar extends JFrame {
     private void selecionarDataHoje() {
         campoDataManual.setText("");
         String hojeFormatado = LocalDate.now().format(FORMATO_BR);
-        String itemHoje = "Hoje (" + hojeFormatado + ")";
 
         for (int i = 0; i < comboDatas.getItemCount(); i++) {
             if (comboDatas.getItemAt(i).startsWith("Hoje (")) {
@@ -658,7 +814,6 @@ public class OrganizacaoEscolar extends JFrame {
         Boolean presente = resolverSituacaoFiltro();
 
         List<Frequencia> resultados = frequenciaDao.consultar(dataFiltro, salaId, nomeAluno, presente);
-
         preencherTabela(resultados);
     }
 
@@ -668,9 +823,7 @@ public class OrganizacaoEscolar extends JFrame {
             try {
                 LocalDate localDate = LocalDate.parse(textoManual, FORMATO_BR);
                 return Date.valueOf(localDate);
-            } catch (DateTimeParseException e) {
-
-            }
+            } catch (DateTimeParseException ignored) {}
         }
 
         String dataSelecionada = (String) comboDatas.getSelectedItem();
@@ -711,6 +864,7 @@ public class OrganizacaoEscolar extends JFrame {
         int total = 0;
         int presentes = 0;
         int faltas = 0;
+        int saidasRegistradas = 0;
 
         if (registros != null) {
             total = registros.size();
@@ -724,13 +878,34 @@ public class OrganizacaoEscolar extends JFrame {
                     faltas++;
                 }
 
+                String entradaStr;
+                if (f.getEntradaHora() != null) {
+                    entradaStr = f.getEntradaHoraFormatada();
+                } else if (Boolean.TRUE.equals(f.isPresente())) {
+                    entradaStr = "Presente";
+                } else {
+                    entradaStr = "—";
+                }
+
+                String saidaStr;
+                if (f.getSaidaHora() != null) {
+                    saidaStr = f.getSaidaHoraFormatada();
+                    saidasRegistradas++;
+                } else if (Boolean.TRUE.equals(f.isPresente())) {
+                    saidaStr = "Pendente (Sem saída)";
+                } else {
+                    saidaStr = "—";
+                }
+
                 modelo.addRow(new Object[]{
                         f.getId(),
                         dataStr,
                         f.getAlunoNome() != null ? f.getAlunoNome() : "Aluno ID " + f.getAlunoId(),
                         f.getTotalFaltasAluno(),
                         f.getSalaNome() != null ? f.getSalaNome() : "-",
-                        situacao
+                        situacao,
+                        entradaStr,
+                        saidaStr
                 });
             }
         }
@@ -742,14 +917,17 @@ public class OrganizacaoEscolar extends JFrame {
             int presentesNoDia = presentes;
             int faltasNoDia = faltas;
             int totalNoDia = total;
+            int saidasNoDia = saidasRegistradas;
 
             if (labelTituloCardTotal != null) labelTituloCardTotal.setText("TOTAL NO DIA (" + dataFiltroStr + ")");
             if (labelTituloCardPresentes != null) labelTituloCardPresentes.setText("PRESENTES NO DIA (" + dataFiltroStr + ")");
+            if (labelTituloCardSaidas != null) labelTituloCardSaidas.setText("SAÍDAS NO DIA (" + dataFiltroStr + ")");
             if (labelTituloCardFaltas != null) labelTituloCardFaltas.setText("FALTAS NO DIA (" + dataFiltroStr + ")");
             if (labelTituloCardTaxa != null) labelTituloCardTaxa.setText("ÍNDICE NO DIA");
 
             labelTotalRegistros.setText(String.valueOf(totalNoDia));
             labelTotalPresentes.setText(String.valueOf(presentesNoDia));
+            labelTotalSaidas.setText(String.valueOf(saidasNoDia));
             labelTotalFaltas.setText(String.valueOf(faltasNoDia));
 
             if (totalNoDia > 0) {
@@ -760,20 +938,24 @@ public class OrganizacaoEscolar extends JFrame {
             }
 
             labelRodapeInfo.setText(
-                    "Data: " + dataFiltroStr + " — Total de presentes no dia: " + presentesNoDia
-                            + " | Faltas no dia: " + faltasNoDia + " (Total listado: " + totalNoDia + ")."
+                    "Data: " + dataFiltroStr + " — Presentes: " + presentesNoDia
+                            + " | Saídas registradas: " + saidasNoDia
+                            + " | Faltas: " + faltasNoDia + " (Total listado: " + totalNoDia + ")."
             );
         } else {
             int presentesHoje = frequenciaDao.contarPresentesHoje();
+            int saidasHoje = frequenciaDao.contarSaidasHoje();
             String hojeFormatado = LocalDate.now().format(FORMATO_BR);
 
             if (labelTituloCardTotal != null) labelTituloCardTotal.setText("TOTAL DE REGISTROS");
-            if (labelTituloCardPresentes != null) labelTituloCardPresentes.setText("PRESENTES NO DIA (" + hojeFormatado + ")");
+            if (labelTituloCardPresentes != null) labelTituloCardPresentes.setText("PRESENTES HOJE (" + hojeFormatado + ")");
+            if (labelTituloCardSaidas != null) labelTituloCardSaidas.setText("SAÍDAS REGISTRADAS HOJE");
             if (labelTituloCardFaltas != null) labelTituloCardFaltas.setText("FALTAS NO HISTÓRICO");
             if (labelTituloCardTaxa != null) labelTituloCardTaxa.setText("ÍNDICE GERAL");
 
             labelTotalRegistros.setText(String.valueOf(total));
             labelTotalPresentes.setText(String.valueOf(presentesHoje));
+            labelTotalSaidas.setText(String.valueOf(saidasHoje));
             labelTotalFaltas.setText(String.valueOf(faltas));
 
             if (total > 0) {
@@ -784,8 +966,9 @@ public class OrganizacaoEscolar extends JFrame {
             }
 
             labelRodapeInfo.setText(
-                    "Mostrando " + total + " registro(s) — Total de presentes no dia de hoje (" + hojeFormatado + "): "
-                            + presentesHoje + " presentes (" + faltas + " faltas no histórico geral)."
+                    "Mostrando " + total + " registro(s) — Presentes hoje (" + hojeFormatado + "): "
+                            + presentesHoje + " | Saídas hoje: " + saidasHoje
+                            + " (" + faltas + " faltas no histórico geral)."
             );
         }
     }

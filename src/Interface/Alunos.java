@@ -127,6 +127,7 @@ public class Alunos extends JFrame {
         JButton botaoInicio = criarBotaoMenu(" Início", true);
         JButton botaoAlunos = criarBotaoMenu(" Alunos", false);
         JButton botaoFrequencia = criarBotaoMenu(" Frequência", false);
+        JButton botaoSaida = criarBotaoMenu(" Ponto de Saída", false);
         JButton botaoOrganizacao = criarBotaoMenu(" Organização", false);
 
         menu.add(botaoInicio);
@@ -134,6 +135,8 @@ public class Alunos extends JFrame {
         menu.add(botaoAlunos);
         menu.add(Box.createVerticalStrut(10));
         menu.add(botaoFrequencia);
+        menu.add(Box.createVerticalStrut(10));
+        menu.add(botaoSaida);
         menu.add(Box.createVerticalStrut(10));
         menu.add(botaoOrganizacao);
 
@@ -153,6 +156,7 @@ public class Alunos extends JFrame {
         // AÇÕES DO MENU
         botaoAlunos.addActionListener(e -> abrirConsulta());
         botaoFrequencia.addActionListener(e -> abrirFrequencia());
+        botaoSaida.addActionListener(e -> abrirSaida());
         botaoOrganizacao.addActionListener(e -> abrirOrganizacao());
 
         return menu;
@@ -292,7 +296,7 @@ public class Alunos extends JFrame {
         textos.add(labelDescricaoSecao);
 
         // CARTÕES DAS FUNCIONALIDADES
-        JPanel cartoes = new JPanel(new GridLayout(2, 2, 18, 18));
+        JPanel cartoes = new JPanel(new GridLayout(2, 3, 16, 16));
         cartoes.setOpaque(false);
 
         cartoes.add(criarCartao(
@@ -321,6 +325,14 @@ public class Alunos extends JFrame {
 
         cartoes.add(criarCartao(
                 "04",
+                "Ponto de saída",
+                "Registre a saída dos alunos via RFID ou manual.",
+                "Registrar saída",
+                () -> abrirSaida()
+        ));
+
+        cartoes.add(criarCartao(
+                "05",
                 "Organização escolar",
                 "Consulte o histórico de frequência e datas diárias.",
                 "Consultar frequência",
@@ -502,6 +514,11 @@ public class Alunos extends JFrame {
     private void abrirFrequencia() {
         FrequenciaTela frequencia = new FrequenciaTela();
         frequencia.setVisible(true);
+    }
+
+    private void abrirSaida() {
+        SaidaTela saida = new SaidaTela();
+        saida.setVisible(true);
     }
 
     private void abrirOrganizacao() {
