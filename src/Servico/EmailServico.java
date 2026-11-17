@@ -115,10 +115,24 @@ public class EmailServico {
     }
 
     /**
-     * Envia o token de verificação diretamente para a caixa de e-mail do Gmail do usuário.
-     * Conecta no servidor smtp.gmail.com:587 com STARTTLS e envia mensagem formatada em HTML.
+     * Envia o token de verificação diretamente para a caixa de e-mail do Gmail do usuário para cadastro.
      */
     public static ResultadoEnvio enviarTokenGmail(String destinatario, String nomeDestinatario, String token) {
+        String assunto = "Código de Verificação: " + token + " - Sistema Escolar";
+        String corpoHtml = gerarCorpoHtml(nomeDestinatario, token);
+        return enviarEmailSmtp(destinatario, assunto, corpoHtml);
+    }
+
+    /**
+     * Envia o token de confirmação para exclusão permanente de conta via Gmail.
+     */
+    public static ResultadoEnvio enviarTokenExclusaoConta(String destinatario, String nomeDestinatario, String token) {
+        String assunto = "⚠️ Código para Exclusão de Conta: " + token + " - Sistema Escolar";
+        String corpoHtml = gerarCorpoHtmlExclusao(nomeDestinatario, token);
+        return enviarEmailSmtp(destinatario, assunto, corpoHtml);
+    }
+
+    private static ResultadoEnvio enviarEmailSmtp(String destinatario, String assunto, String corpoHtml) {
         if (destinatario == null || !destinatario.contains("@") || !destinatario.contains(".")) {
             return new ResultadoEnvio(
                     false,
@@ -233,11 +247,9 @@ public class EmailServico {
             }
 
             // 10. Construir Mensagem MIME com HTML
-            String assunto = "Código de Verificação: " + token + " - Sistema Escolar";
             String assuntoB64 = "=?UTF-8?B?" + Base64.getEncoder().encodeToString(assunto.getBytes(StandardCharsets.UTF_8)) + "?=";
             String remetenteB64 = "=?UTF-8?B?" + Base64.getEncoder().encodeToString(remetenteNome.getBytes(StandardCharsets.UTF_8)) + "?= <" + usuarioSmtp + ">";
 
-            String corpoHtml = gerarCorpoHtml(nomeDestinatario, token);
             String corpoB64 = Base64.getMimeEncoder().encodeToString(corpoHtml.getBytes(StandardCharsets.UTF_8));
 
             writer.write("From: " + remetenteB64 + "\r\n");
@@ -337,6 +349,48 @@ public class EmailServico {
                 "    <tr>\n" +
                 "      <td style=\"background-color:#f8fafc;padding:18px;text-align:center;font-size:11px;color:#94a3b8;border-top:1px solid #f1f5f9;\">\n" +
                 "        Sistema de Controle de Faltas e Organização Escolar • Gestão Segura\n" +
+                "      </td>\n" +
+                "    </tr>\n" +
+                "  </table>\n" +
+                "</body>\n" +
+                "</html>";
+    }
+
+    private static String gerarCorpoHtmlExclusao(String nome, String token) {
+        String nomeExibicao = (nome != null && !nome.trim().isEmpty()) ? nome.trim() : "Usuário";
+        return "<!DOCTYPE html>\n" +
+                "<html>\n" +
+                "<head><meta charset=\"UTF-8\"></head>\n" +
+                "<body style=\"margin:0;padding:24px;background-color:#f1f5f9;font-family:'Segoe UI',Helvetica,Arial,sans-serif;color:#1e293b;\">\n" +
+                "  <table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"max-width:520px;background-color:#ffffff;border-radius:14px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,0.06);margin:20px auto;border:1px solid #fee2e2;\">\n" +
+                "    <tr>\n" +
+                "      <td style=\"background: linear-gradient(135deg, #dc2626, #991b1b);padding:30px 24px;text-align:center;color:#ffffff;\">\n" +
+                "        <h1 style=\"margin:0;font-size:22px;font-weight:700;letter-spacing:0.5px;\">⚠️ Confirmação de Exclusão de Conta</h1>\n" +
+                "        <p style=\"margin:8px 0 0 0;font-size:13px;opacity:0.92;\">Atenção: Ação Irreversível</p>\n" +
+                "      </td>\n" +
+                "    </tr>\n" +
+                "    <tr>\n" +
+                "      <td style=\"padding:32px 30px;\">\n" +
+                "        <h2 style=\"margin:0 0 14px 0;font-size:18px;color:#0f172a;\">Olá, " + nomeExibicao + "!</h2>\n" +
+                "        <p style=\"margin:0 0 20px 0;font-size:14px;line-height:1.6;color:#475569;\">\n" +
+                "          Recebemos uma solicitação para <strong>excluir permanentemente sua conta</strong> no <strong>Sistema Escolar</strong>.<br>\n" +
+                "          Para confirmar a exclusão e remover seu acesso de forma definitiva, insira o código de segurança abaixo no aplicativo:\n" +
+                "        </p>\n" +
+                "        <div style=\"text-align:center;margin:28px 0;padding:20px;background-color:#fef2f2;border:2px dashed #ef4444;border-radius:12px;\">\n" +
+                "          <div style=\"font-size:11px;font-weight:700;color:#dc2626;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;\">Código para Exclusão de Conta</div>\n" +
+                "          <span style=\"font-size:36px;font-weight:800;letter-spacing:10px;color:#991b1b;font-family:'Courier New',Consolas,monospace;\">" + token + "</span>\n" +
+                "        </div>\n" +
+                "        <p style=\"margin:0 0 8px 0;font-size:12px;color:#dc2626;line-height:1.5;\">\n" +
+                "          ⚠️ <strong>Importante:</strong> Esta ação não poderá ser desfeita. Sua conta e login serão removidos do sistema.\n" +
+                "        </p>\n" +
+                "        <p style=\"margin:0;font-size:12px;color:#94a3b8;line-height:1.5;\">\n" +
+                "          Se você NÃO solicitou a exclusão desta conta, altere sua senha imediatamente e não informe este código a ninguém.\n" +
+                "        </p>\n" +
+                "      </td>\n" +
+                "    </tr>\n" +
+                "    <tr>\n" +
+                "      <td style=\"background-color:#f8fafc;padding:18px;text-align:center;font-size:11px;color:#94a3b8;border-top:1px solid #f1f5f9;\">\n" +
+                "        Sistema de Controle de Faltas e Organização Escolar • Segurança do Usuário\n" +
                 "      </td>\n" +
                 "    </tr>\n" +
                 "  </table>\n" +

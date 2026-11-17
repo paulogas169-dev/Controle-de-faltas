@@ -24,6 +24,7 @@ public class Configuracoes extends JDialog {
     private static final Preferences PREFERENCIAS =
             Preferences.userNodeForPackage(Configuracoes.class);
 
+    private final JFrame pai;
     private final Usuario usuario;
     private final Consumer<Color> aoMudarCor;
     private final Runnable aoAtualizarUsuario;
@@ -45,12 +46,13 @@ public class Configuracoes extends JDialog {
     ) {
         super(pai, "Configurações", true);
 
+        this.pai = pai;
         this.usuario = usuario;
         this.aoMudarCor = aoMudarCor;
         this.aoAtualizarUsuario = aoAtualizarUsuario;
 
-        setSize(580, 640);
-        setMinimumSize(new Dimension(500, 580));
+        setSize(600, 720);
+        setMinimumSize(new Dimension(520, 640));
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setLocationRelativeTo(pai);
 
@@ -134,52 +136,78 @@ public class Configuracoes extends JDialog {
         formulario.add(campoLogin);
         formulario.add(Box.createVerticalStrut(20));
 
-        JSeparator separador = new JSeparator();
-        separador.setForeground(BORDA);
-        separador.setAlignmentX(Component.LEFT_ALIGNMENT);
+        JSeparator separador1 = new JSeparator();
+        separador1.setForeground(BORDA);
+        separador1.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        formulario.add(separador);
-        formulario.add(Box.createVerticalStrut(18));
+        formulario.add(separador1);
+        formulario.add(Box.createVerticalStrut(24));
 
-        JLabel tituloAparencia = criarTituloSecao("Aparência e Tema");
-        JLabel descricaoCor = criarLabel("Padrão visual configurado permanentemente para o sistema:");
+        // SEÇÃO: EXCLUIR CONTA (COM CONFIRMAÇÃO DE TOKEN VIA E-MAIL)
 
-        JPanel painelTemaFixo = new JPanel(new BorderLayout(14, 0));
-        painelTemaFixo.setBackground(new Color(248, 250, 252));
-        painelTemaFixo.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(203, 213, 225), 1),
-                BorderFactory.createEmptyBorder(12, 16, 12, 16)
-        ));
-        painelTemaFixo.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
-        painelTemaFixo.setAlignmentX(Component.LEFT_ALIGNMENT);
-        painelTemaFixo.putClientProperty(FlatClientProperties.STYLE, "arc:10");
+        JLabel tituloZonaPerigo = criarTituloSecao("Excluir Conta");
+        tituloZonaPerigo.setForeground(new Color(185, 28, 28));
 
-        JLabel iconeSol = new JLabel("☀️");
-        iconeSol.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 18));
+        JLabel descricaoPerigo = criarLabel("Para excluir sua conta definitivamente, um código de confirmação será enviado para seu e-mail:");
 
-        JLabel infoTema = new JLabel("Modo Claro / Tema Branco Fixo (Padrão Ativo)");
-        infoTema.setFont(new Font("Segoe UI", Font.BOLD, 13));
-        infoTema.setForeground(new Color(30, 41, 59));
+        JButton btnExcluirConta = new JButton("🗑️ Excluir Minha Conta");
+        btnExcluirConta.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        btnExcluirConta.setForeground(new Color(185, 28, 28));
+        btnExcluirConta.setBackground(new Color(254, 242, 242));
+        btnExcluirConta.setFocusPainted(false);
+        btnExcluirConta.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnExcluirConta.setPreferredSize(new Dimension(210, 40));
+        btnExcluirConta.setMaximumSize(new Dimension(230, 40));
+        btnExcluirConta.setAlignmentX(Component.LEFT_ALIGNMENT);
+        btnExcluirConta.putClientProperty(FlatClientProperties.STYLE,
+                "arc:10;focusWidth:0;borderWidth:1;borderColor:#fca5a5;hoverBackground:#fee2e2;pressedBackground:#fecaca");
+        btnExcluirConta.addActionListener(e -> solicitarExclusaoConta());
 
-        JLabel tagFixo = new JLabel("  PADRÃO FIXO  ");
-        tagFixo.setFont(new Font("Segoe UI", Font.BOLD, 10));
-        tagFixo.setForeground(AZUL);
-        tagFixo.setBackground(new Color(239, 246, 255));
-        tagFixo.setOpaque(true);
-        tagFixo.setBorder(BorderFactory.createEmptyBorder(4, 6, 4, 6));
-        tagFixo.putClientProperty(FlatClientProperties.STYLE, "arc:6");
-
-        painelTemaFixo.add(iconeSol, BorderLayout.WEST);
-        painelTemaFixo.add(infoTema, BorderLayout.CENTER);
-        painelTemaFixo.add(tagFixo, BorderLayout.EAST);
-
-        formulario.add(tituloAparencia);
+        formulario.add(tituloZonaPerigo);
         formulario.add(Box.createVerticalStrut(8));
-        formulario.add(descricaoCor);
-        formulario.add(Box.createVerticalStrut(12));
-        formulario.add(painelTemaFixo);
+        formulario.add(descricaoPerigo);
+        formulario.add(Box.createVerticalStrut(10));
+        formulario.add(btnExcluirConta);
 
         return formulario;
+    }
+
+    private void solicitarExclusaoConta() {
+        if (usuario == null) {
+            JOptionPane.showMessageDialog(this, "Usuário não identificado.", "Erro", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        String email = campoEmail.getText().trim();
+        if (email.isEmpty() || !email.contains("@") || !email.contains(".")) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Informe um endereço de e-mail válido no campo de e-mail acima para receber o código de exclusão!",
+                    "E-mail obrigatório",
+                    JOptionPane.WARNING_MESSAGE
+            );
+            campoEmail.requestFocus();
+            return;
+        }
+
+        usuario.setEmail(email);
+
+        int confirm = JOptionPane.showConfirmDialog(
+                this,
+                "⚠️ ATENÇÃO: Confirmação de Exclusão de Conta\n\n"
+                        + "Você está solicitando a exclusão definitiva da sua conta (" + usuario.getLogin() + ").\n"
+                        + "Um código de verificação (token de 6 dígitos) será enviado para:\n"
+                        + email + "\n\n"
+                        + "Deseja continuar e enviar o código para o seu e-mail?",
+                "Excluir Conta",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE
+        );
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            DialogoTokenExclusaoConta dialogo = new DialogoTokenExclusaoConta(this, pai, usuario);
+            dialogo.setVisible(true);
+        }
     }
 
     private JPanel criarRodape() {

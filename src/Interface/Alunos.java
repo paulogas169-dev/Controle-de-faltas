@@ -124,11 +124,12 @@ public class Alunos extends JFrame {
         menu.add(labelMenu);
         menu.add(Box.createVerticalStrut(15));
 
-        JButton botaoInicio = criarBotaoMenu(" Início", true);
-        JButton botaoAlunos = criarBotaoMenu(" Alunos", false);
-        JButton botaoFrequencia = criarBotaoMenu(" Frequência", false);
-        JButton botaoSaida = criarBotaoMenu(" Ponto de Saída", false);
-        JButton botaoOrganizacao = criarBotaoMenu(" Organização", false);
+        JButton botaoInicio = criarBotaoMenu("🏠  Início", true);
+        JButton botaoAlunos = criarBotaoMenu("👨‍🎓  Alunos", false);
+        JButton botaoFrequencia = criarBotaoMenu("📋  Ponto de Entrada", false);
+        JButton botaoSaida = criarBotaoMenu("🚪  Ponto de Saída", false);
+        JButton botaoOrganizacao = criarBotaoMenu("📊  Organização", false);
+        JButton botaoSalas = criarBotaoMenu("🏫  Salas", false);
 
         menu.add(botaoInicio);
         menu.add(Box.createVerticalStrut(10));
@@ -139,6 +140,8 @@ public class Alunos extends JFrame {
         menu.add(botaoSaida);
         menu.add(Box.createVerticalStrut(10));
         menu.add(botaoOrganizacao);
+        menu.add(Box.createVerticalStrut(10));
+        menu.add(botaoSalas);
 
         menu.add(Box.createVerticalGlue());
 
@@ -158,6 +161,7 @@ public class Alunos extends JFrame {
         botaoFrequencia.addActionListener(e -> abrirFrequencia());
         botaoSaida.addActionListener(e -> abrirSaida());
         botaoOrganizacao.addActionListener(e -> abrirOrganizacao());
+        botaoSalas.addActionListener(e -> abrirSalas());
 
         return menu;
     }
@@ -221,35 +225,14 @@ public class Alunos extends JFrame {
         labelUsuario = new JLabel("Olá, " + usuario.getNome());
         labelUsuario.setFont(new Font("Segoe UI", Font.BOLD, 12));
 
-
-        java.net.URL recursoEngrenagem =
-                getClass().getResource("/Imagens/engrenagem.png");
-
-        botaoConfiguracoes = new JButton("Configurações");
-
-        if (recursoEngrenagem != null) {
-            ImageIcon iconeOriginal = new ImageIcon(recursoEngrenagem);
-
-            Image imagem = iconeOriginal.getImage().getScaledInstance(
-                    18, 18, Image.SCALE_SMOOTH
-            );
-
-            botaoConfiguracoes.setIcon(new ImageIcon(imagem));
-        } else {
-            System.err.println("Ícone de engrenagem não encontrado!");
-        }
-
-        botaoConfiguracoes.setIconTextGap(8);
-        botaoConfiguracoes.setFont(new Font("Segoe UI", Font.BOLD, 12));
-
+        botaoConfiguracoes = new JButton("⚙  Configurações");
+        botaoConfiguracoes.setFont(new Font("Segoe UI Emoji", Font.BOLD, 14));
         botaoConfiguracoes.setFocusPainted(false);
         botaoConfiguracoes.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
         botaoConfiguracoes.putClientProperty(
                 FlatClientProperties.STYLE,
                 "arc:10;focusWidth:0;borderWidth:0"
         );
-
         botaoConfiguracoes.addActionListener(
                 e -> abrirConfiguracoes()
         );
@@ -337,6 +320,14 @@ public class Alunos extends JFrame {
                 "Consulte o histórico de frequência e datas diárias.",
                 "Consultar frequência",
                 () -> abrirOrganizacao()
+        ));
+
+        cartoes.add(criarCartao(
+                "06",
+                "Gerenciar salas",
+                "Cadastre, consulte, edite e exclua salas.",
+                "Gerenciar salas",
+                () -> abrirSalas()
         ));
 
         conteudo.add(textos, BorderLayout.NORTH);
@@ -524,6 +515,11 @@ public class Alunos extends JFrame {
     private void abrirOrganizacao() {
         OrganizacaoEscolar organizacao = new OrganizacaoEscolar();
         organizacao.setVisible(true);
+    }
+
+    private void abrirSalas() {
+        GerenciarSalas gerenciarSalas = new GerenciarSalas();
+        gerenciarSalas.setVisible(true);
     }
 
     private void abrirConfiguracoes() {
