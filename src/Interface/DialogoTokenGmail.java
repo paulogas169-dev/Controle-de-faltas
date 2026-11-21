@@ -202,6 +202,8 @@ public class DialogoTokenGmail extends JDialog {
 
     /**
      * Envia o token para o Gmail em segundo plano (SwingWorker) para não travar a interface.
+     * O token NUNCA é exibido na tela — apenas enviado para o e-mail cadastrado.
+     * Em caso de falha, o cadastro é bloqueado até que o envio funcione.
      */
     private void iniciarEnvioToken() {
         tokenAtual = EmailServico.gerarToken();
@@ -214,34 +216,59 @@ public class DialogoTokenGmail extends JDialog {
         SwingWorker<EmailServico.ResultadoEnvio, Void> worker = new SwingWorker<>() {
             @Override
             protected EmailServico.ResultadoEnvio doInBackground() {
-
-                System.out.println("CHAMANDO SERVIÇO DE EMAIL!");
-
                 return EmailServico.enviarTokenGmail(email, nome, tokenAtual);
             }
 
             @Override
             protected void done() {
                 progressBar.setVisible(false);
-                btnConfirmar.setEnabled(true);
-                btnReenviar.setEnabled(true);
-                campoToken.requestFocus();
 
                 try {
                     EmailServico.ResultadoEnvio resultado = get();
                     if (resultado.sucesso) {
+                        // Envio OK — libera o campo e o botão confirmar
+                        btnConfirmar.setEnabled(true);
+                        btnReenviar.setEnabled(true);
+                        campoToken.setEnabled(true);
+                        campoToken.requestFocus();
                         labelStatus.setForeground(VERDE);
                         labelStatus.setText("<html><center>✅ <b>Código enviado para seu Gmail!</b> Verifique a caixa de entrada ou spam.</center></html>");
                     } else if (!resultado.configurado) {
+                        // E-mail não configurado no servidor — bloqueia
+                        btnConfirmar.setEnabled(false);
+                        btnReenviar.setEnabled(true);
+                        campoToken.setEnabled(false);
                         labelStatus.setForeground(AMARELO);
-                        labelStatus.setText("<html><center>⚠️ <b>[Modo Teste]</b> Configure sua Senha de App no <code>email.properties</code>.<br>Seu token de teste é: <font color='#2563eb'><b>" + tokenAtual + "</b></font></center></html>");
+                        labelStatus.setText("<html><center>⚠️ <b>Envio de e-mail não configurado.</b><br>Configure o <code>email.properties</code> e clique em <b>Reenviar</b>.</center></html>");
+                        JOptionPane.showMessageDialog(DialogoTokenGmail.this,
+                                "O servidor de e-mail não está configurado.\nConfigure o arquivo email.properties e tente reenviar o código.",
+                                "Configuração de e-mail necessária",
+                                JOptionPane.WARNING_MESSAGE);
                     } else {
-                        labelStatus.setForeground(AMARELO);
-                        labelStatus.setText("<html><center>⚠️ <b>Falha ao enviar via Gmail:</b> " + resultado.detalhe + "<br>Token para teste: <font color='#2563eb'><b>" + tokenAtual + "</b></font></center></html>");
+                        // Falha no envio (sem internet, credencial errada, etc.) — bloqueia
+                        btnConfirmar.setEnabled(false);
+                        btnReenviar.setEnabled(true);
+                        campoToken.setEnabled(false);
+                        labelStatus.setForeground(new Color(220, 38, 38));
+                        labelStatus.setText("<html><center>❌ <b>Falha ao enviar o e-mail.</b><br>Verifique sua conexão e clique em <b>Reenviar código</b>.</center></html>");
+                        JOptionPane.showMessageDialog(DialogoTokenGmail.this,
+                                "Não foi possível enviar o código para o e-mail:\n" + email +
+                                "\n\nDetalhe: " + resultado.detalhe +
+                                "\n\nVerifique sua conexão com a internet e clique em \"Reenviar código\".",
+                                "Falha no envio do e-mail",
+                                JOptionPane.ERROR_MESSAGE);
                     }
                 } catch (Exception ex) {
-                    labelStatus.setForeground(AMARELO);
-                    labelStatus.setText("<html><center>Token para teste: <font color='#2563eb'><b>" + tokenAtual + "</b></font></center></html>");
+                    btnConfirmar.setEnabled(false);
+                    btnReenviar.setEnabled(true);
+                    campoToken.setEnabled(false);
+                    labelStatus.setForeground(new Color(220, 38, 38));
+                    labelStatus.setText("<html><center>❌ <b>Erro ao conectar ao servidor de e-mail.</b><br>Verifique sua conexão e clique em <b>Reenviar código</b>.</center></html>");
+                    JOptionPane.showMessageDialog(DialogoTokenGmail.this,
+                            "Erro inesperado ao tentar enviar o código para:\n" + email +
+                            "\n\nVerifique sua conexão com a internet e tente reenviar.",
+                            "Erro no envio",
+                            JOptionPane.ERROR_MESSAGE);
                 }
             }
         };

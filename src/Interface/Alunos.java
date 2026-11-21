@@ -45,6 +45,8 @@ public class Alunos extends JFrame {
         setMinimumSize(new Dimension(900, 600));
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
+        Configuracoes.aplicarIcone(this);
 
         painelPrincipal = new JPanel(new BorderLayout());
 
@@ -124,12 +126,13 @@ public class Alunos extends JFrame {
         menu.add(labelMenu);
         menu.add(Box.createVerticalStrut(15));
 
-        JButton botaoInicio = criarBotaoMenu("🏠  Início", true);
-        JButton botaoAlunos = criarBotaoMenu("👨‍🎓  Alunos", false);
-        JButton botaoFrequencia = criarBotaoMenu("📋  Ponto de Entrada", false);
-        JButton botaoSaida = criarBotaoMenu("🚪  Ponto de Saída", false);
-        JButton botaoOrganizacao = criarBotaoMenu("📊  Organização", false);
-        JButton botaoSalas = criarBotaoMenu("🏫  Salas", false);
+        JButton botaoInicio     = criarBotaoMenu("🏠", "Início",          true);
+        JButton botaoAlunos     = criarBotaoMenu("👨‍🎓", "Alunos",           false);
+        JButton botaoFrequencia = criarBotaoMenu("📋", "Ponto de Entrada", false);
+        JButton botaoSaida      = criarBotaoMenu("🚪", "Ponto de Saída",   false);
+        JButton botaoOrganizacao= criarBotaoMenu("📊", "Organização",      false);
+        JButton botaoSalas      = criarBotaoMenu("🏫", "Salas",            false);
+        JButton botaoCartoes    = criarBotaoMenu("💳", "Cartões RFID",     false);
 
         menu.add(botaoInicio);
         menu.add(Box.createVerticalStrut(10));
@@ -142,6 +145,8 @@ public class Alunos extends JFrame {
         menu.add(botaoOrganizacao);
         menu.add(Box.createVerticalStrut(10));
         menu.add(botaoSalas);
+        menu.add(Box.createVerticalStrut(10));
+        menu.add(botaoCartoes);
 
         menu.add(Box.createVerticalGlue());
 
@@ -162,30 +167,46 @@ public class Alunos extends JFrame {
         botaoSaida.addActionListener(e -> abrirSaida());
         botaoOrganizacao.addActionListener(e -> abrirOrganizacao());
         botaoSalas.addActionListener(e -> abrirSalas());
+        botaoCartoes.addActionListener(e -> abrirCadastroCartoes());
 
         return menu;
     }
 
-    private JButton criarBotaoMenu(String texto, boolean selecionado) {
+    private JButton criarBotaoMenu(String icone, String texto, boolean selecionado) {
 
-        JButton botao = new JButton(texto);
+        Color corFundo  = selecionado ? new Color(37, 99, 235) : AZUL_ESCURO;
+        Color corTexto  = selecionado ? BRANCO : new Color(220, 231, 243);
 
-        botao.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        botao.setHorizontalAlignment(SwingConstants.LEFT);
+        // Label do ícone — usa Segoe UI Emoji para garantir renderização no Windows
+        JLabel lblIcone = new JLabel(icone);
+        lblIcone.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 16));
+        lblIcone.setForeground(corTexto);
+        lblIcone.setOpaque(false);
+
+        // Label do texto
+        JLabel lblTexto = new JLabel(texto);
+        lblTexto.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        lblTexto.setForeground(corTexto);
+        lblTexto.setOpaque(false);
+
+        // Painel que agrupa ícone + texto lado a lado
+        JPanel conteudo = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+        conteudo.setOpaque(false);
+        conteudo.add(lblIcone);
+        conteudo.add(lblTexto);
+
+        JButton botao = new JButton();
+        botao.setLayout(new BorderLayout());
+        botao.add(conteudo, BorderLayout.CENTER);
+
+        botao.setBackground(corFundo);
         botao.setMaximumSize(new Dimension(210, 45));
         botao.setPreferredSize(new Dimension(210, 45));
         botao.setAlignmentX(Component.LEFT_ALIGNMENT);
         botao.setFocusPainted(false);
+        botao.setBorderPainted(false);
+        botao.setContentAreaFilled(true);
         botao.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-        if (selecionado) {
-            botao.setBackground(new Color(37, 99, 235));
-            botao.setForeground(BRANCO);
-        } else {
-            botao.setBackground(AZUL_ESCURO);
-            botao.setForeground(new Color(220, 231, 243));
-        }
-
         botao.putClientProperty(
                 FlatClientProperties.STYLE,
                 "arc:12;focusWidth:0;borderWidth:0"
@@ -279,7 +300,7 @@ public class Alunos extends JFrame {
         textos.add(labelDescricaoSecao);
 
         // CARTÕES DAS FUNCIONALIDADES
-        JPanel cartoes = new JPanel(new GridLayout(2, 3, 16, 16));
+        JPanel cartoes = new JPanel(new GridLayout(0, 3, 16, 16));
         cartoes.setOpaque(false);
 
         cartoes.add(criarCartao(
@@ -330,8 +351,21 @@ public class Alunos extends JFrame {
                 () -> abrirSalas()
         ));
 
+        cartoes.add(criarCartao(
+                "07",
+                "Cartões RFID e Fotos",
+                "Associe cartões RFID e fotos do rosto aos alunos.",
+                "Gerenciar cartões",
+                () -> abrirCadastroCartoes()
+        ));
+
+        JScrollPane scrollCartoes = new JScrollPane(cartoes);
+        scrollCartoes.setOpaque(false);
+        scrollCartoes.getViewport().setOpaque(false);
+        scrollCartoes.setBorder(null);
+
         conteudo.add(textos, BorderLayout.NORTH);
-        conteudo.add(cartoes, BorderLayout.CENTER);
+        conteudo.add(scrollCartoes, BorderLayout.CENTER);
 
         return conteudo;
     }
@@ -520,6 +554,24 @@ public class Alunos extends JFrame {
     private void abrirSalas() {
         GerenciarSalas gerenciarSalas = new GerenciarSalas();
         gerenciarSalas.setVisible(true);
+    }
+
+    private void abrirCadastroCartoes() {
+        SwingUtilities.invokeLater(() -> {
+            try {
+                CadastroCartaoRfid cadastroCartao = new CadastroCartaoRfid();
+                cadastroCartao.setVisible(true);
+            } catch (Throwable t) {
+                System.err.println("Erro ao abrir a tela de cadastro de cartões RFID: " + t.getMessage());
+                t.printStackTrace();
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Erro ao abrir a tela de cartões RFID: " + t.getMessage(),
+                        "Erro",
+                        JOptionPane.ERROR_MESSAGE
+                );
+            }
+        });
     }
 
     private void abrirConfiguracoes() {

@@ -27,6 +27,7 @@ public class Tela extends JFrame {
         setMinimumSize(new Dimension(760, 520));
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
+        Configuracoes.aplicarIcone(this);
 
         JPanel principal = new JPanel(new BorderLayout());
         principal.setBackground(FUNDO);

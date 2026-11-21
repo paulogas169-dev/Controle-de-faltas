@@ -7,6 +7,15 @@ public class Aluno {
     private int total_faltas;
     private int sala_id;
     private String sala;
+    private String uid_rfid;
+
+    public String getUid_rfid() {
+        return uid_rfid;
+    }
+
+    public void setUid_rfid(String uid_rfid) {
+        this.uid_rfid = uid_rfid;
+    }
 
     public String getSala() {
         return sala;
@@ -26,6 +35,21 @@ public class Aluno {
         this.faltas = faltas;
         this.total_faltas = total_faltas;
         this.sala_id = sala_id;
+    }
+
+    public Aluno(int id, String nome, String uid_rfid, int sala_id) {
+        this.id = id;
+        this.nome = nome;
+        this.uid_rfid = uid_rfid;
+        this.sala_id = sala_id;
+    }
+
+    @Override
+    public String toString() {
+        if (sala != null && !sala.isBlank()) {
+            return nome + " (" + sala + ")";
+        }
+        return nome != null ? nome : "";
     }
 
     public int getId() {

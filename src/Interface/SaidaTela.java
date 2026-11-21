@@ -6,6 +6,7 @@ import DAO.SalaDao;
 import Escola.Aluno;
 import Escola.Frequencia;
 import Escola.Sala;
+import Servico.FotoServico;
 import testeserial.LeitorRfid;
 
 import com.formdev.flatlaf.FlatClientProperties;
@@ -68,6 +69,7 @@ public class SaidaTela extends JFrame {
         setMinimumSize(new Dimension(980, 680));
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
+        Configuracoes.aplicarIcone(this);
 
         JPanel principal = new JPanel(new BorderLayout());
         principal.setBackground(FUNDO);
@@ -145,6 +147,15 @@ public class SaidaTela extends JFrame {
         textos.add(Box.createVerticalStrut(7));
         textos.add(subtitulo);
 
+        JPanel ladoEsquerdo = new JPanel(new FlowLayout(FlowLayout.LEFT, 16, 0));
+        ladoEsquerdo.setOpaque(false);
+        ImageIcon iconeHeader = FotoServico.getIconeApp(54, 54);
+        if (iconeHeader != null) {
+            JLabel lblIcone = new JLabel(iconeHeader);
+            ladoEsquerdo.add(lblIcone);
+        }
+        ladoEsquerdo.add(textos);
+
         JLabel etiqueta = new JLabel("  REGISTRO DE SAÍDA  ");
         etiqueta.setFont(new Font("Segoe UI", Font.BOLD, 11));
         etiqueta.setForeground(Color.WHITE);
@@ -153,7 +164,7 @@ public class SaidaTela extends JFrame {
         etiqueta.setBorder(BorderFactory.createEmptyBorder(9, 8, 9, 8));
         etiqueta.putClientProperty(FlatClientProperties.STYLE, "arc:8");
 
-        cabecalho.add(textos, BorderLayout.CENTER);
+        cabecalho.add(ladoEsquerdo, BorderLayout.CENTER);
         cabecalho.add(etiqueta, BorderLayout.EAST);
 
         return cabecalho;
@@ -215,7 +226,9 @@ public class SaidaTela extends JFrame {
         legendaFoto.setFont(new Font("Segoe UI", Font.BOLD, 12));
         legendaFoto.setForeground(new Color(100, 116, 139));
 
-        labelFoto = new JLabel("Aguardando cartão", SwingConstants.CENTER);
+        labelFoto = new JLabel();
+        labelFoto.setIcon(FotoServico.criarPlaceholderAguardando(320, 360));
+        labelFoto.setHorizontalAlignment(SwingConstants.CENTER);
         labelFoto.setPreferredSize(new Dimension(320, 360));
         labelFoto.setMinimumSize(new Dimension(320, 360));
         labelFoto.setOpaque(true);
@@ -371,7 +384,7 @@ public class SaidaTela extends JFrame {
                 if (!telaFechada) {
                     limparIdentificacao();
                     labelNomeAluno.setText("Aluno não encontrado");
-                    labelSalaAluno.setText("Cartão não cadastrado");
+                    labelSalaAluno.setText("Cartão não cadastrado (" + uid + ")");
                     labelHoraSaida.setText("—:—:—");
                     labelStatusRFID.setText("Verifique o cadastro do cartão no sistema.");
                     labelStatusRFID.setForeground(Color.RED);
@@ -386,13 +399,20 @@ public class SaidaTela extends JFrame {
         }
         final String salaExibicao = nomeSala;
 
+        // Mostra o aluno e a foto IMEDIATAMENTE após a leitura do cartão
+        SwingUtilities.invokeLater(() -> {
+            if (!telaFechada) {
+                mostrarAluno(aluno, salaExibicao, uid);
+                labelStatusRFID.setText("Aluno identificado! Registrando saída...");
+                labelStatusRFID.setForeground(VERDE_ESCURO);
+            }
+        });
+
         FrequenciaDao frequenciaDao = new FrequenciaDao();
         FrequenciaDao.ResultadoSaida resultado = frequenciaDao.registrarSaidaRFID(aluno.getId());
 
         SwingUtilities.invokeLater(() -> {
             if (telaFechada) return;
-
-            mostrarAluno(aluno, salaExibicao);
 
             if (resultado.isSucesso()) {
                 labelHoraSaida.setText(resultado.getHoraFormatada());
@@ -412,7 +432,7 @@ public class SaidaTela extends JFrame {
         });
     }
 
-    private void mostrarAluno(Aluno aluno, String nomeSala) {
+    private void mostrarAluno(Aluno aluno, String nomeSala, String uid) {
         String nome = aluno.getNome() == null ? "Aluno" : aluno.getNome();
         labelNomeAluno.setText(
                 "<html><div style='text-align:center; width:420px;'>"
@@ -421,13 +441,13 @@ public class SaidaTela extends JFrame {
         );
         labelSalaAluno.setText("Turma: " + escaparHtml(nomeSala));
 
-        ImageIcon foto = carregarFoto(nome);
+        ImageIcon foto = FotoServico.obterFotoAluno(aluno, uid, 320, 360);
         if (foto != null) {
             labelFoto.setIcon(foto);
             labelFoto.setText("");
         } else {
-            labelFoto.setIcon(null);
-            labelFoto.setText("Foto não encontrada");
+            labelFoto.setIcon(FotoServico.criarAvatarPlaceholder(nome, 320, 360));
+            labelFoto.setText("");
         }
     }
 
@@ -438,69 +458,9 @@ public class SaidaTela extends JFrame {
                 .replace("\"", "&quot;");
     }
 
-    private ImageIcon carregarFoto(String nomeAluno) {
-        if (nomeAluno == null) return null;
-        String nome = nomeAluno.toUpperCase(Locale.ROOT);
-        String arquivo;
-        if (nome.contains("JULIO")) arquivo = "Julio.jpeg";
-        else if (nome.contains("MARCELO")) arquivo = "Marcelo.jpeg";
-        else if (nome.contains("PAULO")) arquivo = "Paulo.jpeg";
-        else return null;
-
-        BufferedImage original = null;
-        java.net.URL recurso = getClass().getResource("/Imagens/" + arquivo);
-        if (recurso != null) {
-            try { original = ImageIO.read(recurso); }
-            catch (IOException ex) { System.err.println("Erro lendo recurso " + arquivo + ": " + ex.getMessage()); }
-        }
-        if (original == null) {
-            String[] caminhos = {"src/Imagens/" + arquivo, "Imagens/" + arquivo,
-                    "src/imagens/" + arquivo, "imagens/" + arquivo,
-                    "Controle de faltas/src/Imagens/" + arquivo};
-            for (String caminho : caminhos) {
-                File f = new File(caminho);
-                if (f.isFile()) {
-                    try { original = ImageIO.read(f); if (original != null) break; }
-                    catch (IOException ex) { System.err.println("Erro lendo " + caminho + ": " + ex.getMessage()); }
-                }
-            }
-        }
-        if (original == null) {
-            return null;
-        }
-        return criarFotoAjustada(original, 320, 360);
-    }
-
-    private ImageIcon criarFotoAjustada(BufferedImage original, int largura, int altura) {
-        double escala = Math.max((double) largura / original.getWidth(),
-                (double) altura / original.getHeight());
-        int larguraNova = Math.max(largura, (int) Math.round(original.getWidth() * escala));
-        int alturaNova = Math.max(altura, (int) Math.round(original.getHeight() * escala));
-        BufferedImage ampliada = new BufferedImage(larguraNova, alturaNova, BufferedImage.TYPE_INT_RGB);
-        Graphics2D g = ampliada.createGraphics();
-        try {
-            g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
-            g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-            g.setRenderingHint(RenderingHints.KEY_COLOR_RENDERING, RenderingHints.VALUE_COLOR_RENDER_QUALITY);
-            g.drawImage(original, 0, 0, larguraNova, alturaNova, null);
-        } finally { g.dispose(); }
-
-        int x = (larguraNova - largura) / 2;
-        int y = (alturaNova - altura) / 2;
-        BufferedImage recorte = ampliada.getSubimage(x, y, largura, altura);
-        BufferedImage finalImagem = new BufferedImage(largura, altura, BufferedImage.TYPE_INT_RGB);
-        Graphics2D gFinal = finalImagem.createGraphics();
-        try {
-            gFinal.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
-            gFinal.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-            gFinal.drawImage(recorte, 0, 0, null);
-        } finally { gFinal.dispose(); }
-        return new ImageIcon(finalImagem);
-    }
-
     private void limparIdentificacao() {
-        labelFoto.setIcon(null);
-        labelFoto.setText("Foto do aluno");
+        labelFoto.setIcon(FotoServico.criarPlaceholderAguardando(320, 360));
+        labelFoto.setText("");
         labelNomeAluno.setText("Aguardando identificação...");
         labelSalaAluno.setText("Turma: —");
         labelHoraSaida.setText("—:—:—");

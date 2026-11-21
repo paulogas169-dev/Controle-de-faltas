@@ -33,6 +33,8 @@ public class ConsultarAlunos extends JFrame {
         setMinimumSize(new Dimension(850, 580));
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
+        Configuracoes.aplicarIcone(this);
 
         JPanel principal = new JPanel(new BorderLayout());
         principal.setBackground(FUNDO);
@@ -276,6 +278,12 @@ public class ConsultarAlunos extends JFrame {
         );
         painel.setBackground(FUNDO);
 
+        JButton botaoCartao = criarBotao(
+                "💳 Cartão RFID & Foto",
+                new Color(239, 246, 255),
+                new Color(37, 99, 235)
+        );
+
         JButton botaoEditar = criarBotao(
                 "Editar aluno",
                 Configuracoes.getCorDestaque(),
@@ -288,6 +296,10 @@ public class ConsultarAlunos extends JFrame {
                 new Color(220, 38, 38)
         );
 
+        botaoCartao.addActionListener(
+                e -> abrirCartaoAlunoSelecionado()
+        );
+
         botaoEditar.addActionListener(
                 e -> editarAlunoSelecionado()
         );
@@ -296,6 +308,7 @@ public class ConsultarAlunos extends JFrame {
                 e -> deletarAlunoSelecionado()
         );
 
+        painel.add(botaoCartao);
         painel.add(botaoEditar);
         painel.add(botaoExcluir);
 
@@ -424,6 +437,26 @@ public class ConsultarAlunos extends JFrame {
                 "Gerenciamento de alunos",
                 JOptionPane.INFORMATION_MESSAGE
         );
+    }
+
+    private void abrirCartaoAlunoSelecionado() {
+        try {
+            int linhaSelecionada = tabela.getSelectedRow();
+            if (linhaSelecionada == -1) {
+                new CadastroCartaoRfid().setVisible(true);
+                return;
+            }
+
+            int linhaModelo = tabela.convertRowIndexToModel(linhaSelecionada);
+            int id = ((Number) modelo.getValueAt(linhaModelo, 0)).intValue();
+            Aluno aluno = new AlunoDao().buscarPorId(id);
+            new CadastroCartaoRfid(aluno).setVisible(true);
+        } catch (Throwable t) {
+            t.printStackTrace();
+            JOptionPane.showMessageDialog(this,
+                    "Erro ao abrir tela de cartões: " + t.getMessage(),
+                    "Erro", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     // EDITAR ALUNO SELECIONADO

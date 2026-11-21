@@ -8,20 +8,24 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionAdapter;
 import java.util.List;
 
 public class GerenciarSalas extends JFrame {
 
-    private final Color AZUL_ESCURO = new Color(20, 43, 74);
-    private final Color AZUL       = new Color(37, 99, 235);
-    private final Color TEXTO      = new Color(23, 43, 77);
-    private final Color CINZA      = new Color(100, 116, 139);
-    private final Color BORDA      = new Color(226, 232, 240);
-    private final Color FUNDO      = new Color(248, 250, 253);
-    private final Color VERMELHO   = new Color(185, 28, 28);
-    private final Color VERMELHO_BG = new Color(254, 242, 242);
-    private final Color VERDE      = new Color(22, 163, 74);
-    private final Color VERDE_BG   = new Color(240, 253, 244);
+    private final Color AZUL_ESCURO  = new Color(20, 43, 74);
+    private final Color AZUL         = new Color(37, 99, 235);
+    private final Color TEXTO        = new Color(23, 43, 77);
+    private final Color CINZA        = new Color(100, 116, 139);
+    private final Color BORDA        = new Color(226, 232, 240);
+    private final Color FUNDO        = new Color(248, 250, 253);
+    private final Color VERMELHO     = new Color(185, 28, 28);
+    private final Color VERMELHO_BG  = new Color(254, 242, 242);
+    private final Color VERMELHO_BORDA = new Color(254, 202, 202);
+    private final Color AZUL_BG      = new Color(239, 246, 255);
+    private final Color AZUL_BORDA   = new Color(191, 219, 254);
 
     private final SalaDao salaDao = new SalaDao();
 
@@ -30,11 +34,12 @@ public class GerenciarSalas extends JFrame {
     private JTextField campoBusca;
     private JTextField campoNomeSala;
     private JLabel labelContador;
+    private AcoesCellRenderer acoesRenderer;
 
     public GerenciarSalas() {
         setTitle("Gerenciar Salas");
-        setSize(820, 620);
-        setMinimumSize(new Dimension(720, 520));
+        setSize(840, 640);
+        setMinimumSize(new Dimension(740, 520));
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
 
@@ -91,6 +96,7 @@ public class GerenciarSalas extends JFrame {
 
         corpo.add(criarPainelCadastro(), BorderLayout.NORTH);
         corpo.add(criarPainelTabela(),   BorderLayout.CENTER);
+        corpo.add(criarPainelAcoesInferior(), BorderLayout.SOUTH);
 
         return corpo;
     }
@@ -131,7 +137,7 @@ public class GerenciarSalas extends JFrame {
         // Permite cadastrar com Enter
         campoNomeSala.addActionListener(e -> cadastrarSala());
 
-        painel.add(label,       BorderLayout.WEST);
+        painel.add(label,         BorderLayout.WEST);
         painel.add(campoNomeSala, BorderLayout.CENTER);
         painel.add(btnCadastrar,  BorderLayout.EAST);
 
@@ -181,20 +187,20 @@ public class GerenciarSalas extends JFrame {
         tabela.setGridColor(BORDA);
         tabela.setSelectionBackground(new Color(239, 246, 255));
         tabela.setSelectionForeground(TEXTO);
-        tabela.setFocusable(false);
+        tabela.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tabela.putClientProperty(FlatClientProperties.STYLE, "selectionArc:8");
 
-        // Coluna ID oculta (guardada mas não exibida visualmente)
+        // Coluna ID oculta
         tabela.getColumnModel().getColumn(0).setMinWidth(0);
         tabela.getColumnModel().getColumn(0).setMaxWidth(0);
         tabela.getColumnModel().getColumn(0).setWidth(0);
 
         // Coluna nome
-        tabela.getColumnModel().getColumn(1).setPreferredWidth(560);
+        tabela.getColumnModel().getColumn(1).setPreferredWidth(520);
 
         // Coluna ações
-        tabela.getColumnModel().getColumn(2).setPreferredWidth(160);
-        tabela.getColumnModel().getColumn(2).setMaxWidth(180);
+        tabela.getColumnModel().getColumn(2).setPreferredWidth(190);
+        tabela.getColumnModel().getColumn(2).setMaxWidth(220);
 
         // Header
         JTableHeader header = tabela.getTableHeader();
@@ -205,8 +211,91 @@ public class GerenciarSalas extends JFrame {
         header.setReorderingAllowed(false);
 
         // Renderer de botões na coluna Ações
-        tabela.getColumnModel().getColumn(2).setCellRenderer(new AcoesCellRenderer());
-        tabela.getColumnModel().getColumn(2).setCellEditor(new AcoesCellEditor());
+        acoesRenderer = new AcoesCellRenderer();
+        tabela.getColumnModel().getColumn(2).setCellRenderer(acoesRenderer);
+
+        // Clique direto nos botões da coluna "Ações" ou duplo clique na linha
+        tabela.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                int row = tabela.rowAtPoint(e.getPoint());
+                if (row >= 0 && SwingUtilities.isRightMouseButton(e)) {
+                    tabela.setRowSelectionInterval(row, row);
+                }
+            }
+
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                int viewRow = tabela.rowAtPoint(e.getPoint());
+                int viewCol = tabela.columnAtPoint(e.getPoint());
+                if (viewRow < 0) return;
+
+                int modelRow = tabela.convertRowIndexToModel(viewRow);
+
+                // Duplo clique em qualquer coluna: edita a sala
+                if (e.getClickCount() == 2 && viewCol != 2) {
+                    editarSala(modelRow);
+                    return;
+                }
+
+                // Clique na coluna de Ações
+                if (viewCol == 2 && SwingUtilities.isLeftMouseButton(e)) {
+                    Rectangle cellRect = tabela.getCellRect(viewRow, viewCol, false);
+                    int relX = e.getX() - cellRect.x;
+                    int relY = e.getY() - cellRect.y;
+
+                    acoesRenderer.setSize(cellRect.width, cellRect.height);
+                    acoesRenderer.doLayout();
+
+                    Rectangle rEditar = acoesRenderer.getBtnEditar().getBounds();
+                    Rectangle rExcluir = acoesRenderer.getBtnExcluir().getBounds();
+
+                    if (rEditar.contains(relX, relY)) {
+                        editarSala(modelRow);
+                    } else if (rExcluir.contains(relX, relY)) {
+                        excluirSala(modelRow);
+                    }
+                }
+            }
+        });
+
+        // Efeito de cursor de mão ao passar o mouse sobre os botões na tabela
+        tabela.addMouseMotionListener(new MouseMotionAdapter() {
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                int viewRow = tabela.rowAtPoint(e.getPoint());
+                int viewCol = tabela.columnAtPoint(e.getPoint());
+                if (viewRow >= 0 && viewCol == 2) {
+                    Rectangle cellRect = tabela.getCellRect(viewRow, viewCol, false);
+                    int relX = e.getX() - cellRect.x;
+                    int relY = e.getY() - cellRect.y;
+
+                    acoesRenderer.setSize(cellRect.width, cellRect.height);
+                    acoesRenderer.doLayout();
+
+                    if (acoesRenderer.getBtnEditar().getBounds().contains(relX, relY) ||
+                        acoesRenderer.getBtnExcluir().getBounds().contains(relX, relY)) {
+                        tabela.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+                        return;
+                    }
+                }
+                tabela.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+            }
+        });
+
+        // Menu de contexto com botão direito
+        JPopupMenu popup = new JPopupMenu();
+        JMenuItem itemEditar = new JMenuItem("✏️ Editar sala");
+        itemEditar.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        itemEditar.addActionListener(e -> editarSalaSelecionada());
+
+        JMenuItem itemExcluir = new JMenuItem("🗑️ Excluir sala");
+        itemExcluir.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        itemExcluir.addActionListener(e -> excluirSalaSelecionada());
+
+        popup.add(itemEditar);
+        popup.add(itemExcluir);
+        tabela.setComponentPopupMenu(popup);
 
         JScrollPane scroll = new JScrollPane(tabela);
         scroll.setBorder(BorderFactory.createLineBorder(BORDA));
@@ -219,10 +308,50 @@ public class GerenciarSalas extends JFrame {
         return painel;
     }
 
+    // ─── PAINEL DE AÇÕES INFERIOR ────────────────────────────────────────────
+
+    private JPanel criarPainelAcoesInferior() {
+        JPanel painel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        painel.setOpaque(false);
+
+        JButton btnEditar = new JButton("✏️ Editar sala selecionada");
+        btnEditar.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        btnEditar.setBackground(AZUL_BG);
+        btnEditar.setForeground(AZUL);
+        btnEditar.setFocusPainted(false);
+        btnEditar.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnEditar.setPreferredSize(new Dimension(190, 38));
+        btnEditar.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(AZUL_BORDA, 1, true),
+                BorderFactory.createEmptyBorder(6, 12, 6, 12)
+        ));
+        btnEditar.putClientProperty(FlatClientProperties.STYLE, "arc:10;focusWidth:0");
+        btnEditar.addActionListener(e -> editarSalaSelecionada());
+
+        JButton btnExcluir = new JButton("🗑️ Excluir sala selecionada");
+        btnExcluir.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        btnExcluir.setBackground(VERMELHO_BG);
+        btnExcluir.setForeground(VERMELHO);
+        btnExcluir.setFocusPainted(false);
+        btnExcluir.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnExcluir.setPreferredSize(new Dimension(190, 38));
+        btnExcluir.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(VERMELHO_BORDA, 1, true),
+                BorderFactory.createEmptyBorder(6, 12, 6, 12)
+        ));
+        btnExcluir.putClientProperty(FlatClientProperties.STYLE, "arc:10;focusWidth:0");
+        btnExcluir.addActionListener(e -> excluirSalaSelecionada());
+
+        painel.add(btnEditar);
+        painel.add(btnExcluir);
+
+        return painel;
+    }
+
     // ─── LÓGICA DE DADOS ─────────────────────────────────────────────────────
 
     private void carregarSalas() {
-        carregarSalas(null);
+        carregarSalas(campoBusca != null ? campoBusca.getText().trim() : null);
     }
 
     private void carregarSalas(String filtro) {
@@ -236,7 +365,7 @@ public class GerenciarSalas extends JFrame {
         }
 
         for (Sala s : salas) {
-            modeloTabela.addRow(new Object[]{s.getId(), s.getNome(), "ações"});
+            modeloTabela.addRow(new Object[]{s.getId(), s.getNome(), ""});
         }
 
         int total = salas.size();
@@ -268,24 +397,59 @@ public class GerenciarSalas extends JFrame {
                     "Sucesso", JOptionPane.INFORMATION_MESSAGE);
         } else {
             JOptionPane.showMessageDialog(this,
-                    "Erro ao cadastrar sala. Tente novamente.",
+                    "Erro ao cadastrar sala. Verifique a conexão com o banco de dados.",
                     "Erro", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    private void editarSala(int linha) {
-        int id     = (int) modeloTabela.getValueAt(linha, 0);
-        String nomeAtual = (String) modeloTabela.getValueAt(linha, 1);
+    private void editarSalaSelecionada() {
+        int linha = tabela.getSelectedRow();
+        if (linha == -1) {
+            JOptionPane.showMessageDialog(this,
+                    "Selecione uma sala na tabela primeiro para editar.",
+                    "Nenhuma sala selecionada",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        editarSala(tabela.convertRowIndexToModel(linha));
+    }
+
+    private void excluirSalaSelecionada() {
+        int linha = tabela.getSelectedRow();
+        if (linha == -1) {
+            JOptionPane.showMessageDialog(this,
+                    "Selecione uma sala na tabela primeiro para excluir.",
+                    "Nenhuma sala selecionada",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        excluirSala(tabela.convertRowIndexToModel(linha));
+    }
+
+    private void editarSala(int modelRow) {
+        if (modelRow < 0 || modelRow >= modeloTabela.getRowCount()) return;
+
+        int id = (int) modeloTabela.getValueAt(modelRow, 0);
+        String nomeAtual = (String) modeloTabela.getValueAt(modelRow, 1);
 
         JTextField campo = new JTextField(nomeAtual);
-        campo.putClientProperty(FlatClientProperties.STYLE, "arc:8;focusWidth:1");
+        campo.putClientProperty(FlatClientProperties.STYLE, "arc:10;focusWidth:1");
         campo.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        campo.setPreferredSize(new Dimension(320, 40));
+        campo.setPreferredSize(new Dimension(340, 40));
 
         JPanel painelDialogo = new JPanel(new BorderLayout(0, 10));
-        painelDialogo.setBorder(BorderFactory.createEmptyBorder(6, 2, 2, 2));
-        painelDialogo.add(new JLabel("Novo nome da sala:"), BorderLayout.NORTH);
+        painelDialogo.setBorder(BorderFactory.createEmptyBorder(8, 4, 8, 4));
+
+        JLabel info = new JLabel("Alterar o nome da sala:");
+        info.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        painelDialogo.add(info, BorderLayout.NORTH);
         painelDialogo.add(campo, BorderLayout.CENTER);
+
+        // Foca automaticamente no campo e seleciona o texto
+        SwingUtilities.invokeLater(() -> {
+            campo.requestFocusInWindow();
+            campo.selectAll();
+        });
 
         int resultado = JOptionPane.showConfirmDialog(
                 this, painelDialogo,
@@ -303,27 +467,45 @@ public class GerenciarSalas extends JFrame {
                 return;
             }
 
+            if (novoNome.equals(nomeAtual)) {
+                return;
+            }
+
             Sala sala = new Sala(id, novoNome);
             if (salaDao.atualizar(sala)) {
-                carregarSalas(campoBusca.getText().trim());
+                carregarSalas(campoBusca != null ? campoBusca.getText().trim() : null);
                 JOptionPane.showMessageDialog(this,
-                        "Sala atualizada com sucesso!",
+                        "Sala atualizada com sucesso para \"" + novoNome + "\"!",
                         "Sucesso", JOptionPane.INFORMATION_MESSAGE);
             } else {
                 JOptionPane.showMessageDialog(this,
-                        "Erro ao atualizar sala.",
+                        "Erro ao atualizar sala. Verifique a conexão com o banco de dados.",
                         "Erro", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
 
-    private void excluirSala(int linha) {
-        int id     = (int) modeloTabela.getValueAt(linha, 0);
-        String nome = (String) modeloTabela.getValueAt(linha, 1);
+    private void excluirSala(int modelRow) {
+        if (modelRow < 0 || modelRow >= modeloTabela.getRowCount()) return;
+
+        int id = (int) modeloTabela.getValueAt(modelRow, 0);
+        String nome = (String) modeloTabela.getValueAt(modelRow, 1);
+
+        // Verifica se existem alunos vinculados antes de tentar excluir
+        int totalAlunos = salaDao.contarAlunos(id);
+        if (totalAlunos > 0) {
+            JOptionPane.showMessageDialog(this,
+                    "Não é possível excluir a sala \"" + nome + "\" porque existem "
+                            + totalAlunos + " aluno(s) vinculados a ela.\n\n"
+                            + "Para excluir esta sala, primeiro transfira ou remova os alunos dela na tela de Consulta de Alunos.",
+                    "⚠️ Sala possui alunos vinculados",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
 
         int confirma = JOptionPane.showConfirmDialog(
                 this,
-                "Tem certeza que deseja excluir a sala:\n\"" + nome + "\"?\n\nEsta ação não pode ser desfeita.",
+                "Tem certeza que deseja excluir a sala:\n\"" + nome + "\"?\n\nEsta ação não poderá ser desfeita.",
                 "🗑️  Confirmar Exclusão",
                 JOptionPane.YES_NO_OPTION,
                 JOptionPane.WARNING_MESSAGE
@@ -331,13 +513,13 @@ public class GerenciarSalas extends JFrame {
 
         if (confirma == JOptionPane.YES_OPTION) {
             if (salaDao.excluir(id)) {
-                carregarSalas(campoBusca.getText().trim());
+                carregarSalas(campoBusca != null ? campoBusca.getText().trim() : null);
                 JOptionPane.showMessageDialog(this,
-                        "Sala excluída com sucesso!",
+                        "Sala \"" + nome + "\" excluída com sucesso!",
                         "Sucesso", JOptionPane.INFORMATION_MESSAGE);
             } else {
                 JOptionPane.showMessageDialog(this,
-                        "Erro ao excluir sala.",
+                        "Erro ao excluir sala. Verifique se existem dependências ou tente novamente.",
                         "Erro", JOptionPane.ERROR_MESSAGE);
             }
         }
@@ -345,30 +527,44 @@ public class GerenciarSalas extends JFrame {
 
     // ─── RENDERER DE BOTÕES NA TABELA ────────────────────────────────────────
 
-    private class AcoesCellRenderer implements javax.swing.table.TableCellRenderer {
-        private final JPanel painel   = new JPanel(new FlowLayout(FlowLayout.CENTER, 6, 4));
+    private class AcoesCellRenderer extends JPanel implements javax.swing.table.TableCellRenderer {
         private final JButton btnEditar  = new JButton("✏️ Editar");
         private final JButton btnExcluir = new JButton("🗑️ Excluir");
 
         AcoesCellRenderer() {
-            painel.setOpaque(true);
+            super(new FlowLayout(FlowLayout.CENTER, 8, 5));
+            setOpaque(true);
 
             btnEditar.setFont(new Font("Segoe UI Emoji", Font.BOLD, 11));
-            btnEditar.setBackground(new Color(239, 246, 255));
+            btnEditar.setBackground(AZUL_BG);
             btnEditar.setForeground(AZUL);
             btnEditar.setFocusPainted(false);
-            btnEditar.setBorderPainted(false);
+            btnEditar.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(AZUL_BORDA, 1, true),
+                    BorderFactory.createEmptyBorder(4, 8, 4, 8)
+            ));
             btnEditar.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
             btnExcluir.setFont(new Font("Segoe UI Emoji", Font.BOLD, 11));
             btnExcluir.setBackground(VERMELHO_BG);
             btnExcluir.setForeground(VERMELHO);
             btnExcluir.setFocusPainted(false);
-            btnExcluir.setBorderPainted(false);
+            btnExcluir.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(VERMELHO_BORDA, 1, true),
+                    BorderFactory.createEmptyBorder(4, 8, 4, 8)
+            ));
             btnExcluir.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-            painel.add(btnEditar);
-            painel.add(btnExcluir);
+            add(btnEditar);
+            add(btnExcluir);
+        }
+
+        public JButton getBtnEditar() {
+            return btnEditar;
+        }
+
+        public JButton getBtnExcluir() {
+            return btnExcluir;
         }
 
         @Override
@@ -376,67 +572,8 @@ public class GerenciarSalas extends JFrame {
                 JTable table, Object value, boolean isSelected,
                 boolean hasFocus, int row, int col) {
 
-            painel.setBackground(isSelected
-                    ? new Color(239, 246, 255)
-                    : Color.WHITE);
-            return painel;
-        }
-    }
-
-    // ─── EDITOR DE BOTÕES NA TABELA ──────────────────────────────────────────
-
-    private class AcoesCellEditor extends DefaultCellEditor {
-        private final JPanel painel   = new JPanel(new FlowLayout(FlowLayout.CENTER, 6, 4));
-        private final JButton btnEditar  = new JButton("✏️ Editar");
-        private final JButton btnExcluir = new JButton("🗑️ Excluir");
-        private int linhaAtual;
-
-        AcoesCellEditor() {
-            super(new JCheckBox());
-
-            painel.setOpaque(true);
-            painel.setBackground(new Color(239, 246, 255));
-
-            btnEditar.setFont(new Font("Segoe UI Emoji", Font.BOLD, 11));
-            btnEditar.setBackground(new Color(239, 246, 255));
-            btnEditar.setForeground(AZUL);
-            btnEditar.setFocusPainted(false);
-            btnEditar.setBorderPainted(false);
-            btnEditar.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-            btnExcluir.setFont(new Font("Segoe UI Emoji", Font.BOLD, 11));
-            btnExcluir.setBackground(VERMELHO_BG);
-            btnExcluir.setForeground(VERMELHO);
-            btnExcluir.setFocusPainted(false);
-            btnExcluir.setBorderPainted(false);
-            btnExcluir.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-            btnEditar.addActionListener(e -> {
-                fireEditingStopped();
-                editarSala(linhaAtual);
-            });
-
-            btnExcluir.addActionListener(e -> {
-                fireEditingStopped();
-                excluirSala(linhaAtual);
-            });
-
-            painel.add(btnEditar);
-            painel.add(btnExcluir);
-        }
-
-        @Override
-        public Component getTableCellEditorComponent(
-                JTable table, Object value, boolean isSelected,
-                int row, int col) {
-            linhaAtual = row;
-            painel.setBackground(new Color(239, 246, 255));
-            return painel;
-        }
-
-        @Override
-        public Object getCellEditorValue() {
-            return "";
+            setBackground(isSelected ? new Color(239, 246, 255) : Color.WHITE);
+            return this;
         }
     }
 }

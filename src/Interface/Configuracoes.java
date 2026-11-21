@@ -6,8 +6,12 @@ import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.FlatLightLaf;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.function.Consumer;
 import java.util.prefs.Preferences;
 
@@ -368,5 +372,54 @@ public class Configuracoes extends JDialog {
 
     public static Color getCorTextoDestaque() {
         return new Color(37, 99, 235);
+    }
+
+    /**
+     * Aplica o ícone da aplicação (icone_app.png) em qualquer Window (JFrame, JDialog).
+     * Carrega via InputStream para funcionar tanto em desenvolvimento quanto dentro do JAR.
+     */
+    public static void aplicarIcone(Window janela) {
+        if (janela == null) return;
+        for (String caminho : new String[]{
+                "/imagens/icone_app.png",
+                "/Imagens/icone_app.png",
+                "imagens/icone_app.png",
+                "Imagens/icone_app.png"
+        }) {
+            try (InputStream is = Configuracoes.class.getResourceAsStream(caminho)) {
+                if (is != null) {
+                    BufferedImage img = ImageIO.read(is);
+                    if (img != null) {
+                        janela.setIconImage(img);
+                        return;
+                    }
+                }
+            } catch (IOException ex) {
+                System.err.println("Erro ao carregar ícone: " + ex.getMessage());
+            }
+        }
+
+        // Tentativa externa via arquivo físico
+        for (String caminhoDisco : new String[]{
+                "Controle de faltas/src/Imagens/icone_app.png",
+                "src/Imagens/icone_app.png",
+                "Imagens/icone_app.png",
+                "imagens/icone_app.png"
+        }) {
+            java.io.File f = new java.io.File(caminhoDisco);
+            if (f.isFile()) {
+                try {
+                    BufferedImage img = ImageIO.read(f);
+                    if (img != null) {
+                        janela.setIconImage(img);
+                        return;
+                    }
+                } catch (IOException ignored) {}
+            }
+        }
+    }
+
+    public static ImageIcon getIconeApp(int largura, int altura) {
+        return Servico.FotoServico.getIconeApp(largura, altura);
     }
 }

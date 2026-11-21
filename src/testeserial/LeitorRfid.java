@@ -6,6 +6,8 @@ import com.fazecast.jSerialComm.SerialPortTimeoutException;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Consumer;
 
 public class LeitorRfid {
@@ -13,8 +15,20 @@ public class LeitorRfid {
     private SerialPort porta;
     private Thread threadLeitura;
     private volatile boolean executando = false;
+    private String nomePortaConectada = "";
+
+    public String getNomePortaConectada() {
+        return nomePortaConectada;
+    }
 
     public boolean iniciar(
+            Consumer<String> aoLerCartao,
+            Consumer<String> aoOcorrerErro) {
+        return iniciar(null, aoLerCartao, aoOcorrerErro);
+    }
+
+    public boolean iniciar(
+            String portaDesejada,
             Consumer<String> aoLerCartao,
             Consumer<String> aoOcorrerErro) {
 
@@ -22,21 +36,30 @@ public class LeitorRfid {
             return true;
         }
 
-        porta = SerialPort.getCommPort("COM4");
-        porta.setBaudRate(9600);
+        String nomePorta = (portaDesejada != null && !portaDesejada.isBlank())
+                ? portaDesejada.trim() : "COM4";
 
-        // Aguarda dados sem transformar cada timeout em erro.
-        porta.setComPortTimeouts(
-                SerialPort.TIMEOUT_READ_SEMI_BLOCKING,
-                500,
-                0
-        );
+        try {
+            porta = SerialPort.getCommPort(nomePorta);
+            nomePortaConectada = nomePorta;
+            porta.setBaudRate(9600);
 
-        if (!porta.openPort()) {
-            aoOcorrerErro.accept(
-                    "Não foi possível abrir a COM4. "
-                            + "Feche o Monitor Serial do Arduino."
+            // Aguarda dados sem transformar cada timeout em erro.
+            porta.setComPortTimeouts(
+                    SerialPort.TIMEOUT_READ_SEMI_BLOCKING,
+                    500,
+                    0
             );
+
+            if (!porta.openPort()) {
+                aoOcorrerErro.accept(
+                        "Não foi possível abrir a porta " + nomePortaConectada + ". "
+                                + "Feche o Monitor Serial do Arduino caso esteja aberto."
+                );
+                return false;
+            }
+        } catch (Throwable t) {
+            aoOcorrerErro.accept("Erro ao conectar à porta " + nomePorta + ": " + t.getMessage());
             return false;
         }
 
